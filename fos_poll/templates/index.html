@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Опросы</title>
+    <style>
+        a {
+            text-decoration: none;
+            color: black;
+            }
+
+        a:active {
+            color: green;
+            }
+        .header:hover {
+            text-decoration: underline;
+            }
+        .header {
+            padding: 20px;
+            }
+        section {
+            display: flex;
+            flex-flow: row wrap;
+            margin: auto;
+            }
+        .poll-link {
+
+            width: 27%;
+            outline: 2px solid #000;
+            border: 3px solid #fff;
+            border-radius: 10px;
+            padding: 10px;
+            margin: 10px;
+            background: aqua;
+            display: flex;
+            flex-flow: column;
+            align-items: center;
+            flex: 1 1 auto;
+            justify-content: space-around;
+            }
+        .poll-link:hover {
+            width: 27%;
+            outline: 2px solid #000;
+            border: 3px solid #fff;
+            border-radius: 10px;
+            padding: 10px;
+            margin: 10px;
+            background: white;
+            display: flex;
+            flex-flow: column;
+            align-items: center;
+            flex: 1 1 auto;
+            justify-content: space-around;
+            }
+
+
+    </style>
+</head>
+<body>
+<hr>
+<div style="float:left">
+    <a href="/admin/" class="header">My polls</a>
+</div>
+<div align="right">
+    <a href="/admin/" class="header">Sign in</a>
+</div>
+<hr>
+<h1 align="center">Лучший сервис опросов в мире</h1>
+<section>
+    {% for poll in polls %}
+    <a class="poll-link" href="">
+        <article>
+            <h2>{{ poll.title }}</h2>
+            <p>{{ poll.description }}</p>
+        </article>
+    </a>
+
+    {% endfor %}
+</section>
+</body>
+</html>
