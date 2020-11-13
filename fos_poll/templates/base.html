@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}{% endblock %}</title>
+     <style>
+        a {
+            text-decoration: none;
+            color: black;
+            }
+        a:active {
+            color: green;
+            }
+        .header:hover {
+            text-decoration: underline;
+            }
+        .header {
+            padding: 20px;
+            }
+        {% block style %}{% endblock %}
+     </style>
+</head>
+<body>
+    <hr>
+        <div style="float:left">
+            <a href="/my_polls/" class="header">Мои опросы</a>
+        </div>
+        <div align="right">
+            <a href="/login/" class="header">Админка</a>
+        </div>
+    <hr>
+    {% block content %}{% endblock %}
+</body>
+</html>

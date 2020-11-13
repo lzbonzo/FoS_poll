@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Админка</title>
+    <style>
+        .header:hover {
+            text-decoration: underline;
+            }
+        .header {
+            padding: 20px;
+            }
+        a {
+            text-decoration: none;
+            color: black;
+            }
+        a:active {
+            color: green;
+            }
+        .table_col {
+              font-family: "Lucida Sans Unicode", "Lucida Grande", Sans-Serif;
+              font-size: 14px;
+              width: 100%;
+              background: white;
+              text-align: left;
+
+              color: #3E4347;
+              }
+        .table_col .table_col td:first-child {
+              color: black;
+              background: #C7DAF0;
+
+
+              }
+        .table_col th {
+
+
+
+            font-weight: bold;
+
+            padding: 8px 10px;
+            }
+        .table_col td {
+            font-size: 12px;
+            background-color: rgba(0, 120, 201, 0.2);
+
+
+
+            padding: 2px 2px;
+            color: #8b8e91;
+            }
+        .poll-link {
+            text-decoration: none;
+            color: black;
+
+            text-align: left;
+
+            margin: 10px;
+            display: flex;
+            flex-flow: column;
+            align-items: left;
+            flex: 1 1 auto;
+            justify-content: space-around;
+            }
+        .poll-link:hover {
+            text-decoration: underline;
+            text-align: left;
+
+            margin: 10px;
+            display: flex;
+            flex-flow: column;
+            align-items: left;
+            flex: 1 1 auto;
+            justify-content: space-around;
+            }
+
+        #delete {
+            background: white;
+            width: 300px;
+            height: 50px;
+            text-align: center;
+            padding: 15px;
+            border: 1px solid black;
+            border-radius: 5px;
+            color: black;
+            display: none;
+            position: absolute;
+            top: 20%;
+            right: 0;
+
+            left: 0;
+            margin: auto;
+          }
+        #delete:target {display: block;}
+        .warning {
+            color: black;
+            padding: 20px;
+            text-decoration: none;
+            }
+        .warning:hover {
+            color: black;
+            padding: 20px;
+            text-decoration: underline;
+            }
+
+
+    </style>
+</head>
+<body>
+
+    <hr>
+        <div style="float:left">
+            <a href="/my_polls/" class="header">Мои опросы</a>
+        </div>
+        <div align="right">
+            <a href="/login/" class="header">Админка</a>
+        </div>
+    <hr>
+    <h1 align="center">Приветствую тебя, админ лучшего сервиса опросов в мире!!!</h1>
+    <table class="table_col">
+  <colgroup>
+      <col>
+  </colgroup>
+  <tr>
+    <th>Опрос</th>
+    <th>Дата начала</th>
+    <th>Дата завершения</th>
+    <th colspan="1"></th>
+  </tr>
+
+
+
+    {% for poll in polls %}
+    <tr>
+
+        <td><a class="poll-link" href="{{ poll.id }}"><b>{{ poll.title }}</b></a></td>
+        <td> {{ poll.date_of_begin|date:"d-m-Y" }}</td>
+        <td>{{ poll.date_of_end|date:"d-m-Y" }}</td>
+        <td align="center"><form action="#delete"><button>Удалить</button></form> </td>
+
+    </tr>
+    {% endfor %}
+
+    </table>
+    <div id="delete">
+        <span style="line-height: 25px;">Вы точно хотите удалить этот опрос?<br>
+        <a href="#" class="warning">Удалить</a>
+        <a href="" class="warning">Отмена</a>
+        </span>
+    </div>
+</body>
+</html>

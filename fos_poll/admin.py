@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.contrib.admin import AdminSite
 from django.db import models
 from django.forms import ChoiceField, Form, Select
 
@@ -8,17 +9,12 @@ from django.utils.html import format_html
 from fos_poll.models import Poll, Question
 
 
-class CommonInlineConfigurationMixin(object):
-    pass
-
-
 class QuestionInline(admin.StackedInline):
     model = Question
     extra = 0
     can_delete = True
     # TODO сделать кнопку удаления вопроса прямо из опроса
     #  - Авторизация в системе
-    #  - После создания поле "дата старта" у опроса менять нельзя
     #  - Подумать над интерфейсом для админа (нужна авторизация, возможно оставить джанговскую авторизацию
 
 
@@ -31,6 +27,15 @@ class QuestionInline(admin.StackedInline):
 class PollAdmin(admin.ModelAdmin):
     list_display = ['title', 'date_of_begin', 'date_of_end']
     inlines = [QuestionInline]
+
+    def get_readonly_fields(self, request, obj=None):
+        """ После создания поле "дата старта/date_of_begin" у опроса менять нельзя """
+        if obj:  # editing an existing object
+            return self.readonly_fields + ('date_of_begin',)
+        return self.readonly_fields
+
+
+
 
 
 

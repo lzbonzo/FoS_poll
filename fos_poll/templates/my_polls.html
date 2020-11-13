@@ -8,6 +8,7 @@
             text-decoration: none;
             color: black;
             }
+
         a:active {
             color: green;
             }
@@ -58,16 +59,16 @@
 <body>
 <hr>
 <div style="float:left">
-    <a href="/my_polls/" class="header">Мои опросы</a>
+    <a href="/" class="header">Главная</a>
 </div>
 <div align="right">
-    <a href="/login/" class="header">Админка</a>
+    <a href="/polls_admin/" class="header">Админка</a>
 </div>
 <hr>
-<h1 align="center">Лучший сервис опросов в мире!</h1>
+<h1 align="center">Мои опросы</h1>
 <section>
     {% for poll in polls %}
-    <a class="poll-link" href="{{ poll.id }}">
+    <a class="poll-link" href="{{ poll.title.split|join:"_" }}">
         <article>
             <h2>{{ poll.title }}</h2>
             <p>{{ poll.description }}</p>

@@ -2,3 +2,6 @@
 .idea
 db.sqlite3
 /__pycache__/
+/fos_test/__pycache__/
+/fos_poll/__pycache__/
+/fos_poll/migrations/

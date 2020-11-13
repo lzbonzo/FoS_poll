@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Опрос № {{ id }}{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+<link rel="stylesheet" href="/resources/demos/style.css">
+<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+<script>
+$( function() {
+  $( "#date_of_begin" ).datepicker();
+} );
+</script>
+<script>
+$( function() {
+  $( "#date_of_end" ).datepicker();
+} );
+</script>
+
+<script>
+    var dt = new Date();
+    var dt_str = dt.toLocaleDateString();
+    var dt_replaced = dt_str.replace(/\./g, '/');
+    $(document).ready(function(){
+    $('#date_of_begin').attr("value", dt_replaced);
+    $('#date_of_end').attr("value", dt_replaced);
+    });
+</script>
+
+<form>
+    <p>
+        <label for="title">Название: </label>
+        <input type="text" id="title" name="title" placeholder="{{ title }}"/>
+    </p>
+    <p>
+        <label for="date_of_begin">Дата начала: </label>
+        <input type="date" id="date_of_begin" name="date_of_begin"/>
+
+    </p>
+    <p>
+        <label for="date_of_end">Дата окончания: </label>
+        <input type="date" id="date_of_end" name="date_of_end"/>
+    </p>
+    <p>
+        <label for="description">Описание: </label>
+        <textarea id="description" name="description">{{ description }}</textarea>
+    </p>
+    <p>
+        <button type="submit">Отправить</button>
+    </p>
+</form>
+
+{% endblock %}

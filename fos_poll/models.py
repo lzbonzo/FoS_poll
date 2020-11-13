@@ -6,7 +6,7 @@ from django.forms import ModelChoiceField, Form, ChoiceField, Select
 
 class Poll(models.Model):
     title = models.CharField(max_length=50)
-    date_of_begin = models.DateField()
+    date_of_begin = models.DateField(auto_now_add=False)
     date_of_end = models.DateField()
     description = models.TextField(max_length=100)
     # question = models.ForeignKey('Question', on_delete=models.CASCADE)

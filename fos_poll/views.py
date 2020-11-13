@@ -1,4 +1,7 @@
-from django.shortcuts import render
+from django.contrib.auth import authenticate, login
+from django.contrib.auth.views import LoginView
+from django.db.models.functions import Coalesce
+from django.shortcuts import render, redirect
 
 # Create your views here.
 from django.views.generic import TemplateView
@@ -20,6 +23,67 @@ class MainPageView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        polls = Poll.objects.values('title', 'description', 'id')
+        context['polls'] = polls
+        return context
+
+
+class PollView(TemplateView):
+    template_name = 'poll.html'
+
+    def get_context_data(self, poll_id, **kwargs):
+        context = super().get_context_data(**kwargs)
+        poll = Poll.objects.filter(id=poll_id)[0]
+        context['id'] = poll_id
+        context['title'] = poll.title
+        context['description'] = poll.description
+        return context
+
+
+class AdminLoginView(TemplateView):
+    template_name = 'login.html'
+
+    def post(self, request, **kwargs):
+        username = request.POST['username']
+        password = request.POST['password']
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            return redirect('/admin/')
+        else:
+            context = super().get_context_data(**kwargs)
+            context['message'] = '*логин или пароль введены неверно'
+            return render(request, self.template_name, context)
+
+class AdminPollsView(TemplateView):
+    template_name = 'admin.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        polls = Poll.objects.values(
+            'title', 'description', 'date_of_begin', 'date_of_end', 'id').order_by('-date_of_begin')
+        context['polls'] = polls
+        return context
+
+
+class MyPollsView(TemplateView):
+    template_name = 'my_polls.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
         polls = Poll.objects.values('title', 'description')
         context['polls'] = polls
+        return context
+
+class EditPollView(TemplateView):
+    template_name = 'edit.html'
+
+    def get_context_data(self, poll_id, **kwargs):
+        context = super().get_context_data(**kwargs)
+        poll = Poll.objects.filter(id=poll_id)[0]
+        print(poll.id)
+
+        context['id'] = poll.id
+        context['title'] = poll.title
+        context['description'] = poll.description
         return context
