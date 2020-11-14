@@ -15,7 +15,8 @@ class Poll(models.Model):
 class Question(models.Model):
     text = models.TextField(max_length=50)
     answer_type = models.CharField(max_length=50,
-                                   choices=[('o', 'choose one'),  ('f', 'choose few'), ('t', 'text')], default='text')
+                                   choices=[('o', 'Выбрать один'),  ('f', 'Выбрать несколько'),
+                                            ('t', 'Текст')], default='text')
     poll = models.ForeignKey('Poll', on_delete=models.CASCADE, default=None)
 
 

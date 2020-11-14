@@ -1,54 +1,124 @@
 {% extends "base.html" %}
 
+
 {% block title %}Опрос № {{ id }}{% endblock %}
 
+{% block left_link %} <a href="/admin/" class="header">Опросы</a> {% endblock %}
 {% block content %}
+
 <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
-<link rel="stylesheet" href="/resources/demos/style.css">
 <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
-<script>
-$( function() {
-  $( "#date_of_begin" ).datepicker();
-} );
-</script>
-<script>
-$( function() {
-  $( "#date_of_end" ).datepicker();
-} );
-</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
 
 <script>
-    var dt = new Date();
-    var dt_str = dt.toLocaleDateString();
-    var dt_replaced = dt_str.replace(/\./g, '/');
-    $(document).ready(function(){
-    $('#date_of_begin').attr("value", dt_replaced);
-    $('#date_of_end').attr("value", dt_replaced);
-    });
+    $( function() {
+    {% if not date_of_begin %}
+    $( "#date_of_begin" ).datepicker({ dateFormat: 'dd-mm-yy' });
+    {% endif %}
+    $( "#date_of_end" ).datepicker({ dateFormat: 'dd-mm-yy' });
+    } );
 </script>
+<script>
+    $(document).ready(function() {
+    var wrapper = $(".container1");
+    var add_button = $(".add_form_field");
+
+    var x = 1;
+    $(add_button).click(function(e) {
+        e.preventDefault();
+        $(wrapper).append('<div id="question_form" name="question_form"><div style="background-color:white;"> \
+        <h3 class="question_number" style=" \
+        padding-left: 10px; margin-top: 0px; margin-bottom: 0px; font-weight: normal;">Вопрос номер: </h3> \
+        <button class="delete" style="display: inline;">Удалить &nbsp;<span>X </span></button> \
+        </div> \
+        <div style=" \
+        overflow: hidden; \
+        padding: 10px; \
+        font-size: 13px; \
+        border-bottom: 1px solid #eee; \
+        background-color: rgba(0, 120, 201, 0.2); "> \
+    <textarea id="question_text" name="question_text" cols="40" rows="10" class="vLargeTextField" maxlength="50" \
+            style=" \
+                border-radius: 5px; \
+                margin: 0px 0px 2px; \
+                width: 610px; \
+                height: 150px;">Введите текст вопроса</textarea> \
+    <p><label for="answer_type">Тип ответа</label> \
+    <select name="answer_type" id="answer_type"> \
+    {% for q in question %} \
+        <option>{{ q.1 }}</option> \
+    {% endfor %} \
+    </select> \
+    </p> \
+    </div></div>'); //add input box
+    x = x + 1;
+
+
+    });
+
+    $(wrapper).on("click", ".delete", function(e) {
+        e.preventDefault();
+        document.getElementById("question_form").remove();
+
+    })
+});
+</script>
+<!--TODO Сделать присовение id для каждого вопроса. И удаления тоже по id. Кнопка удаления - крестик-->
+{% if not date_of_begin %}
+    <script>
+        var dt = new Date();
+        var dt_str = dt.toLocaleDateString();
+        var dt_replaced = dt_str.replace(/\./g, '-');
+        $(document).ready(function(){
+        $('#date_of_begin').attr("placeholder", dt_replaced);
+        $('#date_of_end').attr("placeholder", dt_replaced);
+        });
+    </script>
+{% endif %}
 
 <form>
     <p>
         <label for="title">Название: </label>
-        <input type="text" id="title" name="title" placeholder="{{ title }}"/>
+        <input type="text" id="title" name="title" value="{{ title }}"/>
     </p>
     <p>
         <label for="date_of_begin">Дата начала: </label>
-        <input type="date" id="date_of_begin" name="date_of_begin"/>
-
+        {% if date_of_begin %}
+        <span>{{ date_of_begin }}</span>
+        {% else %}
+        <input type="date" id="date_of_begin" name="date_of_begin" value="{{ date_of_begin }}"readonly/>
+        {% endif %}
     </p>
     <p>
         <label for="date_of_end">Дата окончания: </label>
-        <input type="date" id="date_of_end" name="date_of_end"/>
+        <input type="date" id="date_of_end" name="date_of_end" value="{{ date_of_end }}"/>
     </p>
     <p>
         <label for="description">Описание: </label>
         <textarea id="description" name="description">{{ description }}</textarea>
     </p>
-    <p>
-        <button type="submit">Отправить</button>
-    </p>
 </form>
+
+
+<form id="'content"></form>
+
+<div class="container1">
+
+    <h3 class="questions_header" style="
+                                    background: #4080bf;
+                                    margin-bottom: 0px;
+                                    padding-top: 20px;
+                                    height: 40px;
+                                    padding-left: 10px;
+                                    color: white;
+                                    font-weight: normal;
+                                    text-shadow: black 0 0 5px;">ВОПРОСЫ</h3>
+
+
+
+</div>
+<button class="add_form_field">Добавить вопрос &nbsp;<span>+ </span></button>
 
 {% endblock %}

@@ -1,12 +1,12 @@
+from datetime import datetime
+
 from django.contrib.auth import authenticate, login
-from django.contrib.auth.views import LoginView
-from django.db.models.functions import Coalesce
 from django.shortcuts import render, redirect
 
 # Create your views here.
 from django.views.generic import TemplateView
 
-from fos_poll.models import Poll
+from fos_poll.models import Poll, Question
 
 
 class About(TemplateView):
@@ -55,6 +55,7 @@ class AdminLoginView(TemplateView):
             context['message'] = '*логин или пароль введены неверно'
             return render(request, self.template_name, context)
 
+
 class AdminPollsView(TemplateView):
     template_name = 'admin.html'
 
@@ -75,15 +76,20 @@ class MyPollsView(TemplateView):
         context['polls'] = polls
         return context
 
+
 class EditPollView(TemplateView):
     template_name = 'edit.html'
 
     def get_context_data(self, poll_id, **kwargs):
         context = super().get_context_data(**kwargs)
         poll = Poll.objects.filter(id=poll_id)[0]
-        print(poll.id)
+        question = Question()._meta.get_field('answer_type').choices
 
         context['id'] = poll.id
         context['title'] = poll.title
         context['description'] = poll.description
+        context['date_of_begin'] = datetime.strftime(poll.date_of_begin, '%d-%m-%Y')
+        context['date_of_end'] = datetime.strftime(poll.date_of_end, '%d-%m-%Y')
+        context['question'] = question
+
         return context
