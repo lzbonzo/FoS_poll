@@ -22,15 +22,15 @@
 </script>
 <script>
     $(document).ready(function() {
-    var wrapper = $(".container1");
+    var wrapper = $(".questions_container");
     var add_button = $(".add_form_field");
 
     var x = 1;
     $(add_button).click(function(e) {
         e.preventDefault();
-        $(wrapper).append('<div id="question_form" name="question_form"><div style="background-color:white;"> \
+        $(wrapper).append('<div><div class="question_form" name="question_form"><div style="background-color:white;"> \
         <h3 class="question_number" style=" \
-        padding-left: 10px; margin-top: 0px; margin-bottom: 0px; font-weight: normal;">Вопрос номер: </h3> \
+        padding-left: 10px; margin-top: 0px; margin-bottom: 0px; font-weight: normal;">Вопрос ' + x + '</h3> \
         <button class="delete" style="display: inline;">Удалить &nbsp;<span>X </span></button> \
         </div> \
         <div style=" \
@@ -52,17 +52,16 @@
     {% endfor %} \
     </select> \
     </p> \
-    </div></div>'); //add input box
-    x = x + 1;
-
-
+    </div></div></div'); //add input box
+     $(".question_form").attr('id', 'question_form' + x);
+     x++;
     });
 
     $(wrapper).on("click", ".delete", function(e) {
         e.preventDefault();
-        document.getElementById("question_form").remove();
+       $(this).parents('.question_form').remove();
 
-    })
+    });
 });
 </script>
 <!--TODO Сделать присовение id для каждого вопроса. И удаления тоже по id. Кнопка удаления - крестик-->
@@ -104,7 +103,7 @@
 
 <form id="'content"></form>
 
-<div class="container1">
+<div class="questions_container">
 
     <h3 class="questions_header" style="
                                     background: #4080bf;
