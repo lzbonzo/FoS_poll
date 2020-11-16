@@ -21,6 +21,12 @@
     } );
 </script>
 <script>
+    function changeNumbers() {
+    $("h3.question_number").each(function(index, obj) {
+    var headertext = 'Вопрос ' + (index + 1);
+    $(obj).html(headertext);
+});
+    }
     $(document).ready(function() {
     var wrapper = $(".questions_container");
     var add_button = $(".add_form_field");
@@ -30,7 +36,8 @@
         e.preventDefault();
         $(wrapper).append('<div><div class="question_form" name="question_form"><div style="background-color:white;"> \
         <h3 class="question_number" style=" \
-        padding-left: 10px; margin-top: 0px; margin-bottom: 0px; font-weight: normal;">Вопрос ' + x + '</h3> \
+        padding-left: 10px; margin-top: 0px; margin-bottom: 0px; font-weight: normal;"> \
+        <span id="dfr">Question</span></h3> \
         <button class="delete" style="display: inline;">Удалить &nbsp;<span>X </span></button> \
         </div> \
         <div style=" \
@@ -55,16 +62,19 @@
     </div></div></div'); //add input box
      $(".question_form").attr('id', 'question_form' + x);
      x++;
+    $("div.question_form").each(function(i, o) { $(o).attr("question" + (i + 1)); });
+    changeNumbers();
     });
 
     $(wrapper).on("click", ".delete", function(e) {
         e.preventDefault();
        $(this).parents('.question_form').remove();
+       changeNumbers();
 
     });
 });
 </script>
-<!--TODO Сделать присовение id для каждого вопроса. И удаления тоже по id. Кнопка удаления - крестик-->
+<!--TODO Кнопка удаления - крестик-->
 {% if not date_of_begin %}
     <script>
         var dt = new Date();
@@ -119,5 +129,4 @@
 
 </div>
 <button class="add_form_field">Добавить вопрос &nbsp;<span>+ </span></button>
-
 {% endblock %}
