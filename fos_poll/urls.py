@@ -11,4 +11,5 @@ urlpatterns = [
     path("admin/", views.AdminPollsView.as_view(), name='admin'),
     path("admin/<int:poll_id>", views.EditPollView.as_view(), name='edit'),
     path("my_polls/", views.MyPollsView.as_view(), name='my_polls'),
+    path("logout/", views.logout_view, name='logout'),
 ]

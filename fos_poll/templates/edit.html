@@ -10,7 +10,37 @@
 <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<style>
 
+.question_div {
+  display: flex;
+  justify-content: space-between;
+}
+.delete {
+    margin-left: 100px;
+    color: black;
+    font-weight: bold;
+    float: right;
+    font-size: 26px;
+    line-height: 20px;
+    cursor: pointer;
+    transition: 0.3s;
+    display: inline;
+    padding-right: 0.3em;
+    margin-top: 5px;
+}
+textarea {
+cols="40"; rows="10"; maxlength="50";
+
+                border-radius: 5px;
+                margin: 0px 0px 2px;
+                width: 610px;
+                height: 150px;
+                }
+input {
+border-radius: 5px 5px 5px 5px;
+}
+</style>
 
 <script>
     $( function() {
@@ -35,23 +65,18 @@
     $(add_button).click(function(e) {
         e.preventDefault();
         $(wrapper).append('<div><div class="question_form" name="question_form"><div style="background-color:white;"> \
-        <h3 class="question_number" style=" \
-        padding-left: 10px; margin-top: 0px; margin-bottom: 0px; font-weight: normal;"> \
-        <span id="dfr">Question</span></h3> \
-        <button class="delete" style="display: inline;">Удалить &nbsp;<span>X </span></button> \
-        </div> \
+        <div class="question_div"> <h3 class="question_number" style=" \
+        padding-left: 10px; margin-top: 5px; margin-bottom: 5px; font-weight: normal;"> \
+        <span>Question</span></h3> \
+        <span class="delete">&times;</span></div> \
+        </div>\
         <div style=" \
         overflow: hidden; \
         padding: 10px; \
         font-size: 13px; \
         border-bottom: 1px solid #eee; \
         background-color: rgba(0, 120, 201, 0.2); "> \
-    <textarea id="question_text" name="question_text" cols="40" rows="10" class="vLargeTextField" maxlength="50" \
-            style=" \
-                border-radius: 5px; \
-                margin: 0px 0px 2px; \
-                width: 610px; \
-                height: 150px;">Введите текст вопроса</textarea> \
+    <textarea id="question_text" name="question_text">Введите текст вопроса</textarea> \
     <p><label for="answer_type">Тип ответа</label> \
     <select name="answer_type" id="answer_type"> \
     {% for q in question %} \
@@ -87,37 +112,38 @@
     </script>
 {% endif %}
 
-<form>
-    <p>
-        <label for="title">Название: </label>
-        <input type="text" id="title" name="title" value="{{ title }}"/>
-    </p>
-    <p>
-        <label for="date_of_begin">Дата начала: </label>
+<form style="background-color: rgba(0, 120, 201, 0.2); margin-bottom: 0px;">
+    <table width="100%" cellspacing="0" cellpadding="4">
+    <tr>
+        <td align="left" width="100"><label class="field_label" for="title">Название: </label></td>
+        <td><input type="text" id="title" name="title" value="{{ title }}"/></td>
+    </tr>
+    <tr>
+        <td align="left" width="100"><label class="field_label" for="date_of_begin">Дата начала: </label>
         {% if date_of_begin %}
-        <span>{{ date_of_begin }}</span>
+        <td><span>{{ date_of_begin }}</span></td>
         {% else %}
-        <input type="date" id="date_of_begin" name="date_of_begin" value="{{ date_of_begin }}"readonly/>
+        <td><input type="date" id="date_of_begin" name="date_of_begin" value="{{ date_of_begin }}"readonly/></td>
         {% endif %}
-    </p>
-    <p>
-        <label for="date_of_end">Дата окончания: </label>
-        <input type="date" id="date_of_end" name="date_of_end" value="{{ date_of_end }}"/>
-    </p>
-    <p>
-        <label for="description">Описание: </label>
-        <textarea id="description" name="description">{{ description }}</textarea>
-    </p>
+    </tr>
+    <tr>
+        <td align="left" width="100"><label class="field_label" for="date_of_end">Дата окончания: </label></td>
+        <td><input type="date" id="date_of_end" name="date_of_end" value="{{ date_of_end }}"/></td>
+    </tr>
+    <tr>
+        <td align="left" width="100"><label class="field_label" for="description">Описание: </label></td>
+        <td><textarea id="description" name="description">{{ description }}</textarea></td>
+    </tr>
+    </table>
 </form>
 
-
-<form id="'content"></form>
 
 <div class="questions_container">
 
     <h3 class="questions_header" style="
                                     background: #4080bf;
                                     margin-bottom: 0px;
+                                    margin-top: 0px;
                                     padding-top: 20px;
                                     height: 40px;
                                     padding-left: 10px;

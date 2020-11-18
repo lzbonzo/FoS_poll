@@ -29,32 +29,21 @@
         .table_col .table_col td:first-child {
               color: black;
               background: #C7DAF0;
-
-
               }
         .table_col th {
-
-
-
             font-weight: bold;
-
             padding: 8px 10px;
             }
         .table_col td {
             font-size: 12px;
             background-color: rgba(0, 120, 201, 0.2);
-
-
-
             padding: 2px 2px;
             color: #8b8e91;
             }
         .poll-link {
             text-decoration: none;
             color: black;
-
             text-align: left;
-
             margin: 10px;
             display: flex;
             flex-flow: column;
@@ -87,33 +76,41 @@
             position: absolute;
             top: 20%;
             right: 0;
-
             left: 0;
             margin: auto;
           }
         #delete:target {display: block;}
         .warning {
+            font: normal 14px Arial;
             color: black;
             padding: 20px;
             text-decoration: none;
+            background: none!important;
+            border: none;
+            padding: 0!important;
+            font-family: arial, sans-serif;
+            cursor: pointer;
             }
-        .warning:hover {
-            color: black;
-            padding: 20px;
-            text-decoration: underline;
-            }
-
-
+        .warning:hover {text-decoration: underline;}
     </style>
+    <script>
+        function DeletePoll() {
+        $(document).on("click","a",function(e){
+           var element =e.target;
+            $.ajax({
+                url: "post_category.php",
+                type: "POST",
+                data: {'id':$(element).attr("id")}
+            });};
+    </script>
 </head>
 <body>
-
     <hr>
         <div style="float:left">
-            <a href="/my_polls/" class="header">Мои опросы</a>
+            <a href="/" class="header">Главная</a>
         </div>
         <div align="right">
-            <a href="/login/" class="header">Админка</a>
+         <a href="{% url 'logout'%}?next={{request.path}}" class="header">Выход</a>
         </div>
     <hr>
     <h1 align="center">Приветствую тебя, админ лучшего сервиса опросов в мире!!!</h1>
@@ -127,26 +124,24 @@
     <th>Дата завершения</th>
     <th colspan="1"></th>
   </tr>
-
-
-
     {% for poll in polls %}
-    <tr>
-
+    <input type='hidden' value='{{ poll.id }}' name='pk'>
+    <tr id="{{ poll.id }}">
         <td><a class="poll-link" href="{{ poll.id }}"><b>{{ poll.title }}</b></a></td>
         <td> {{ poll.date_of_begin|date:"d-m-Y" }}</td>
         <td>{{ poll.date_of_end|date:"d-m-Y" }}</td>
-        <td align="center"><form action="#delete"><button>Удалить</button></form> </td>
-
+        <td align="center"><form action="#delete"><button><span>Удалить</span></button></form> </td>
     </tr>
     {% endfor %}
-
     </table>
+    <form class="delete_poll" method="post" action="/admin/">{% csrf_token %}
     <div id="delete">
+<!--TODO Как-то передавать id опроса в пост-->
         <span style="line-height: 25px;">Вы точно хотите удалить этот опрос?<br>
-        <a href="#" class="warning">Удалить</a>
-        <a href="" class="warning">Отмена</a>
+        <button type="submit" class="warning" onclick="DeletePoll()">Удалить</button>
+            <button class="warning">Отмена</button>
         </span>
     </div>
+    </form>
 </body>
 </html>

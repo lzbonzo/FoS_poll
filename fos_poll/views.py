@@ -1,12 +1,13 @@
 from datetime import datetime
 
-from django.contrib.auth import authenticate, login
-from django.shortcuts import render, redirect
+from django.contrib.auth import authenticate, login, logout
+from django.shortcuts import render, redirect, render_to_response
 
 # Create your views here.
 from django.views.generic import TemplateView
 
 from fos_poll.models import Poll, Question
+from fos_test import settings
 
 
 class About(TemplateView):
@@ -49,7 +50,7 @@ class AdminLoginView(TemplateView):
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-            return redirect('/admin/')
+            return redirect('/')
         else:
             context = super().get_context_data(**kwargs)
             context['message'] = '*логин или пароль введены неверно'
@@ -65,6 +66,12 @@ class AdminPollsView(TemplateView):
             'title', 'description', 'date_of_begin', 'date_of_end', 'id').order_by('-date_of_begin')
         context['polls'] = polls
         return context
+
+    def post(self, request, *args, **kwargs):
+        context = self.get_context_data(message='Record deleted')
+        print(request.POST)
+        # Poll.objects.get(id=5).delete()
+        return self.render_to_response(context)
 
 
 class MyPollsView(TemplateView):
@@ -93,3 +100,8 @@ class EditPollView(TemplateView):
         context['question'] = question
 
         return context
+
+
+def logout_view(request):
+    logout(request)
+    return redirect('/')
