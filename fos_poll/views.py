@@ -1,13 +1,13 @@
 from datetime import datetime
 
 from django.contrib.auth import authenticate, login, logout
-from django.shortcuts import render, redirect, render_to_response
+from django.shortcuts import render, redirect
 
 # Create your views here.
 from django.views.generic import TemplateView
 
 from fos_poll.models import Poll, Question
-from fos_test import settings
+
 
 
 class About(TemplateView):
@@ -69,8 +69,8 @@ class AdminPollsView(TemplateView):
 
     def post(self, request, *args, **kwargs):
         context = self.get_context_data(message='Record deleted')
-        print(request.POST)
-        # Poll.objects.get(id=5).delete()
+        poll_id = request.POST.get('id')
+        Poll.objects.get(id=poll_id).delete()
         return self.render_to_response(context)
 
 
@@ -79,7 +79,7 @@ class MyPollsView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        polls = Poll.objects.values('title', 'description')
+        polls = Poll.objects.values('title', 'description', 'id')
         context['polls'] = polls
         return context
 
@@ -87,19 +87,38 @@ class MyPollsView(TemplateView):
 class EditPollView(TemplateView):
     template_name = 'edit.html'
 
-    def get_context_data(self, poll_id, **kwargs):
+    def get_context_data(self, poll_id=-1, **kwargs):
         context = super().get_context_data(**kwargs)
-        poll = Poll.objects.filter(id=poll_id)[0]
+        current_poll_data = {}
+        poll = Poll.objects.filter(id=poll_id)
+        if poll.count():
+            poll = poll[0]
+            current_poll_data['title'] = poll.title
+            current_poll_data['description'] = poll.description
+            current_poll_data['date_of_begin'] = datetime.strftime(poll.date_of_begin, '%d-%m-%Y')
+            current_poll_data['date_of_end'] = datetime.strftime(poll.date_of_end, '%d-%m-%Y')
+            current_poll_data['id'] = poll.id
         question = Question()._meta.get_field('answer_type').choices
-
-        context['id'] = poll.id
-        context['title'] = poll.title
-        context['description'] = poll.description
-        context['date_of_begin'] = datetime.strftime(poll.date_of_begin, '%d-%m-%Y')
-        context['date_of_end'] = datetime.strftime(poll.date_of_end, '%d-%m-%Y')
-        context['question'] = question
-
+        current_poll_data['answer_types'] = question
+        context['poll'] = current_poll_data
         return context
+
+    def post(self, request, *args, **kwargs):
+        print(request.POST.get('questions'))
+        id = request.POST.get('id')
+        if id:
+            poll = Poll.objects.filter(id=id)[0]
+        else:
+            poll = Poll()
+            poll.date_of_begin = datetime.strftime(
+                datetime.strptime(request.POST.get('date_of_begin'), '%d-%m-%Y'), '%Y-%m-%d')
+        poll.title = request.POST.get('title')
+        poll.description = request.POST.get('description')
+        poll.date_of_end = datetime.strftime(datetime.strptime(request.POST.get('date_of_end'), '%d-%m-%Y'), '%Y-%m-%d')
+        poll.save()
+        context = self.get_context_data(message='Poll added',
+                                        poll_id=poll.id)
+        return self.render_to_response(context)
 
 
 def logout_view(request):

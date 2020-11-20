@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Админка</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
     <style>
         .header:hover {
             text-decoration: underline;
@@ -23,13 +25,13 @@
               width: 100%;
               background: white;
               text-align: left;
-
               color: #3E4347;
               }
         .table_col .table_col td:first-child {
               color: black;
               background: #C7DAF0;
               }
+
         .table_col th {
             font-weight: bold;
             padding: 8px 10px;
@@ -54,7 +56,6 @@
         .poll-link:hover {
             text-decoration: underline;
             text-align: left;
-
             margin: 10px;
             display: flex;
             flex-flow: column;
@@ -92,16 +93,41 @@
             cursor: pointer;
             }
         .warning:hover {text-decoration: underline;}
+        .question_div {
+            display: flex;
+            justify-content: space-between;
+            }
+        .add {
+
+            margin-bottom: 20px;
+            border-radius: 5px;
+            background-color: white;
+            color: black;
+            float: left;
+            cursor: pointer;
+            padding-top: 0px;
+            border: 1px solid black;
+
+            }
+        .add:hover {
+
+           text-decoration: underline;
+            }
+
+
+
     </style>
+    <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
     <script>
-        function DeletePoll() {
-        $(document).on("click","a",function(e){
-           var element =e.target;
-            $.ajax({
-                url: "post_category.php",
-                type: "POST",
-                data: {'id':$(element).attr("id")}
-            });};
+    $(document).on("click", ".delete", function(e) {
+        e.preventDefault();
+        if (confirm('Вы действительно хотите удалить этот опрос?')) {
+        var CSRFtoken = $('input[name=csrfmiddlewaretoken]').val();
+        var id = $(this).parents('.pollRow').attr('id');
+        $(this).parents('.pollRow').remove();
+        $.post( "/admin/", { csrfmiddlewaretoken: CSRFtoken, id: id  } );
+        }
+});
     </script>
 </head>
 <body>
@@ -113,11 +139,19 @@
          <a href="{% url 'logout'%}?next={{request.path}}" class="header">Выход</a>
         </div>
     <hr>
+
     <h1 align="center">Приветствую тебя, админ лучшего сервиса опросов в мире!!!</h1>
+        <div class="add">
+
+        <a href="{% url 'new_poll'  %}" class="fa fa-plus" style="font-size: 15px; color: green; padding: 5px;">
+            <span style="color: black;">ДОБАВИТЬ ОПРОС</span>
+        </a>
+
+
+            </div>
+
     <table class="table_col">
-  <colgroup>
-      <col>
-  </colgroup>
+
   <tr>
     <th>Опрос</th>
     <th>Дата начала</th>
@@ -125,23 +159,15 @@
     <th colspan="1"></th>
   </tr>
     {% for poll in polls %}
-    <input type='hidden' value='{{ poll.id }}' name='pk'>
-    <tr id="{{ poll.id }}">
+    <tr class="pollRow" id="{{ poll.id }}"> {% csrf_token %}
         <td><a class="poll-link" href="{{ poll.id }}"><b>{{ poll.title }}</b></a></td>
         <td> {{ poll.date_of_begin|date:"d-m-Y" }}</td>
         <td>{{ poll.date_of_end|date:"d-m-Y" }}</td>
-        <td align="center"><form action="#delete"><button><span>Удалить</span></button></form> </td>
+        <td align="center">
+            <button type="submit" name="{{ poll.id }}" class="delete">Удалить</button></td>
+
     </tr>
     {% endfor %}
     </table>
-    <form class="delete_poll" method="post" action="/admin/">{% csrf_token %}
-    <div id="delete">
-<!--TODO Как-то передавать id опроса в пост-->
-        <span style="line-height: 25px;">Вы точно хотите удалить этот опрос?<br>
-        <button type="submit" class="warning" onclick="DeletePoll()">Удалить</button>
-            <button class="warning">Отмена</button>
-        </span>
-    </div>
-    </form>
 </body>
 </html>

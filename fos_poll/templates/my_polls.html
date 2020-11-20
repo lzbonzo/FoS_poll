@@ -65,13 +65,13 @@
     <a href="/" class="header">Главная</a>
 </div>
 <div align="right">
-    <a href="/polls_admin/" class="header">Админка</a>
+    <span class="header"></span>
 </div>
 <hr>
 <h1 align="center">Мои опросы</h1>
 <section>
     {% for poll in polls %}
-    <a class="poll-link" href="{{ poll.title.split|join:"_" }}">
+    <a class="poll-link" href="poll{{ poll.id }}">
         <article>
             <h2>{{ poll.title }}</h2>
             <p>{{ poll.description }}</p>
