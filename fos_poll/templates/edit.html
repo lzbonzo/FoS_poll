@@ -70,6 +70,7 @@ border-radius: 5px 5px 5px 5px;
                                     font-weight: normal;
                                     text-shadow: black 0 0 5px;
 }
+
 </style>
 
 <script>
@@ -91,10 +92,10 @@ border-radius: 5px 5px 5px 5px;
     var wrapper = $(".questions_container");
     var add_button = $(".add_form_field");
 
-    var x = 1;
+
     $(add_button).click(function(e) {
         e.preventDefault();
-        $(wrapper).append('<div><div class="question_form" name="question_form"><div style="background-color:white;"> \
+        $(wrapper).append('<div class="question_form"><div style="background-color:white;"> \
         <div class="question_div"> <h3 class="question_number" style=" \
         padding-left: 10px; margin-top: 5px; margin-bottom: 5px; font-weight: normal;"> \
         <span></span></h3> \
@@ -114,16 +115,17 @@ border-radius: 5px 5px 5px 5px;
     {% endfor %} \
     </select> \
     </p> \
-    </div></div></div'); //add input box
-     $(".question_form").attr('id', 'question_form' + x);
-     x++;
-    $("div.question_form").each(function(i, o) { $(o).attr("question" + (i + 1)); });
+    </div></div>'); //add input box
+
+
+
+    $(".question_form").each(function(i,o) {$(o).attr('id', 'question' + (i + 1))});
     changeNumbers();
     });
 
     $(wrapper).on("click", ".delete", function(e) {
         e.preventDefault();
-       $(this).parents('.question_form').remove();
+       $(this).parents('.question').remove();
        changeNumbers();
 
     });
@@ -140,49 +142,84 @@ border-radius: 5px 5px 5px 5px;
         });
     </script>
 {% endif %}
-
-<!--TODO добавлять все вопросы, а не один-->
+<script>
+    function notIsEmpty() {
+  document.querySelector('.question_form').forEach((index, obj) => {
+    const textarea = document.querySelector('textarea');
+    if (!obj === textarea.value) {
+      alert('empty');
+       return false;
+    }
+  });
+}
+</script>
 <script>
     $(document).on("click", ".save", function(e) {
 
+        if ($(document).find("#title").val()) {
         e.preventDefault();
-        alert('sdsd');
+
 
         var CSRFtoken = $('input[name=csrfmiddlewaretoken]').val();
         var questions = {};
+        var title =  $(document).find("#title").val();
+        var date_of_begin =  $(document).find("#date_of_begin").val();
+        var date_of_end =  $(document).find("#date_of_end").val();
+        var description =  $(document).find("#description").val();
 
         $("div.question_form").each(function(index, obj) {
-
+        if ($(obj).find("textarea").val()) {
         var question_text = $(obj).find("textarea").val();
         var answer_type = $(obj).find("select").val();
-        var question_info = {text: question_text, type: answer_type};
+        var question_info = {text: question_text, answer_type: answer_type };
+        var id = $(obj).attr('id');
+        questions[id]= question_info;
 
 
-        $.extend(questions, question_info);
+        }
+        } );
 
-        });
-        $.post( "/admin/{{ poll.id }}", { csrfmiddlewaretoken: CSRFtoken, questions:JSON.stringify( questions ) } );
+
+        if (!notIsEmpty()) {
+
+        {% if poll.id %}
+        alert(notIsEmpty());
+        alert('posted');
+        $.post( "/admin/{{ poll.id }}", { csrfmiddlewaretoken: CSRFtoken, id: {{ poll.id }},
+        title: title, date_of_begin: date_of_begin, date_of_end: date_of_end, description: description,
+        questions:JSON.stringify( questions ) } );
+
+        {% else %}
+
+
+        $.post( "/admin/new_poll", { csrfmiddlewaretoken: CSRFtoken,
+        title: title, date_of_begin: date_of_begin, date_of_end: date_of_end, description: description,
+         questions:JSON.stringify( questions )});
+        {% endif %}
+        } else {alert('Введите текст вопроса, пожалуйста.');}
+        } else {alert('Введите названия опроса, пожалуйста.');
+        }
 });
     </script>
 
 
-<form style="background-color: rgba(0, 120, 201, 0.2); margin-bottom: 0px;" method="post">{% csrf_token %}
+<form style="background-color: rgba(0, 120, 201, 0.2); margin-bottom: 0px;" >{% csrf_token %}
     <table width="100%" cellspacing="0" cellpadding="4">
     <tr>
         <td align="left" width="100"><label class="field_label" for="title">Название: </label></td>
-        <td><input type="text" id="title" name="title" value="{{ poll.title }}"/></td>
+        <td><input type="text" id="title" name="title" required value="{{ poll.title }}"/></td>
     </tr>
     <tr>
         <td align="left" width="100"><label class="field_label" for="date_of_begin">Дата начала: </label>
         {% if poll.date_of_begin %}
         <td><input type="date" id="date_of_begin" name="date_of_begin" value="{{ poll.date_of_begin }}" readonly/></td>
         {% else %}
-        <td><input type="date" id="date_of_begin" name="date_of_begin" value="{{ poll.date_of_begin }}"/></td>
+        <td><input type="date" id="date_of_begin" required name="date_of_begin" value="{{ poll.date_of_begin }}"/></td>
         {% endif %}
     </tr>
     <tr>
         <td align="left" width="100"><label class="field_label" for="date_of_end">Дата окончания: </label></td>
-        <td><input type="date" id="date_of_end" name="date_of_end" value="{{ poll.date_of_end }}"/></td>
+        <td><input type="date" id="date_of_end" required name="date_of_end" value="{{ poll.date_of_end }}"/></td>
     </tr>
     <tr>
         <td align="left" width="100"><label class="field_label" for="description">Описание: </label></td>
@@ -194,7 +231,6 @@ border-radius: 5px 5px 5px 5px;
     </table>
 
 
-
 <div class="questions_container">
 
     <div style="display: flex;
@@ -204,8 +240,39 @@ border-radius: 5px 5px 5px 5px;
     <input type="hidden" id="id" name="id" value="{{ poll.id }}">
 
 
-<button  type="submit" class="save" style="float: right;">Сохранить</button></div>
+
+<button class="save" style="float: right;">Сохранить</button></div>
+    {% for question in poll.questions %}
+<div><div class="question_form"><div style="background-color:white;">
+        <div class="question_div"> <h3 class="question_number" style="
+        padding-left: 10px; margin-top: 5px; margin-bottom: 5px; font-weight: normal;">
+        <span></span></h3>
+        <span class="delete">&times;</span></div>
+        </div>
+        <div style="
+        overflow: hidden;
+        padding: 10px;
+        font-size: 13px;
+        border-bottom: 1px solid #eee;
+        background-color: rgba(0, 120, 201, 0.2); ">
+    <textarea id="question_text" name="question_text">{{ question.text }}</textarea>
+    <p><label for="answer_type">Тип ответа</label>
+    <select name="answer_type" id="answer_type">
+    {% for type in poll.answer_types %}
+        {% if type.1 != question.get_answer_type_display %}
+        <option>{{ type.1 }}</option>
+        {% endif %}
+
+    {% endfor %}
+        <option selected="selected" >{{ question.get_answer_type_display }}</option>
+    </select>
+    </p>
+        </div></div></div>
+    {% endfor %}
+<script>$(".question_form").each(function(i,o) {$(o).attr('id', 'question' + (i + 1))}); changeNumbers();</script>
 </div>
 </form>
+
+
 <button class="add_form_field">Добавить вопрос &nbsp;<span>+ </span></button>
 {% endblock %}

@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 
 from django.contrib.auth import authenticate, login, logout
@@ -7,7 +8,6 @@ from django.shortcuts import render, redirect
 from django.views.generic import TemplateView
 
 from fos_poll.models import Poll, Question
-
 
 
 class About(TemplateView):
@@ -98,16 +98,24 @@ class EditPollView(TemplateView):
             current_poll_data['date_of_begin'] = datetime.strftime(poll.date_of_begin, '%d-%m-%Y')
             current_poll_data['date_of_end'] = datetime.strftime(poll.date_of_end, '%d-%m-%Y')
             current_poll_data['id'] = poll.id
-        question = Question()._meta.get_field('answer_type').choices
-        current_poll_data['answer_types'] = question
+            questions = Question.objects.filter(poll=poll)
+            current_poll_data['questions'] = questions
+
+        answer_types = Question()._meta.get_field('answer_type').choices
+        current_poll_data['answer_types'] = answer_types
         context['poll'] = current_poll_data
         return context
 
     def post(self, request, *args, **kwargs):
-        print(request.POST.get('questions'))
         id = request.POST.get('id')
+
+        print('id',id)
         if id:
             poll = Poll.objects.filter(id=id)[0]
+            old_questions = Question.objects.filter(poll=poll)
+            if old_questions.count():
+                for old_question in old_questions:
+                    old_question.delete()
         else:
             poll = Poll()
             poll.date_of_begin = datetime.strftime(
@@ -116,6 +124,15 @@ class EditPollView(TemplateView):
         poll.description = request.POST.get('description')
         poll.date_of_end = datetime.strftime(datetime.strptime(request.POST.get('date_of_end'), '%d-%m-%Y'), '%Y-%m-%d')
         poll.save()
+        questions = json.loads(request.POST.get('questions'))
+        if questions:
+            for every_question, question_info in questions.items():
+                question = Question()
+                question.answer_type = question_info.get('answer_type')
+                question.text = question_info.get('text')
+                question.poll = poll
+                question.save()
+
         context = self.get_context_data(message='Poll added',
                                         poll_id=poll.id)
         return self.render_to_response(context)
