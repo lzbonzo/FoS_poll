@@ -144,22 +144,20 @@ border-radius: 5px 5px 5px 5px;
 {% endif %}
 <script>
     function notIsEmpty() {
-  document.querySelector('.question_form').forEach((index, obj) => {
-    const textarea = document.querySelector('textarea');
-    if (!obj === textarea.value) {
-      alert('empty');
-       return false;
-    }
-  });
+    var i = true;
+    $(".question_form").each(function(index, obj) {
+    if (!$(obj).find("textarea").val())
+    {alert('empty'); i = false; return false;}
+    });
+    return i;
 }
 </script>
 <script>
     $(document).on("click", ".save", function(e) {
-
         if ($(document).find("#title").val()) {
         e.preventDefault();
 
-
+        if (notIsEmpty()) {
         var CSRFtoken = $('input[name=csrfmiddlewaretoken]').val();
         var questions = {};
         var title =  $(document).find("#title").val();
@@ -168,38 +166,29 @@ border-radius: 5px 5px 5px 5px;
         var description =  $(document).find("#description").val();
 
         $("div.question_form").each(function(index, obj) {
-        if ($(obj).find("textarea").val()) {
+
         var question_text = $(obj).find("textarea").val();
         var answer_type = $(obj).find("select").val();
         var question_info = {text: question_text, answer_type: answer_type };
         var id = $(obj).attr('id');
         questions[id]= question_info;
-
-
-        }
         } );
-
-
-        if (!notIsEmpty()) {
-
         {% if poll.id %}
-        alert(notIsEmpty());
-        alert('posted');
         $.post( "/admin/{{ poll.id }}", { csrfmiddlewaretoken: CSRFtoken, id: {{ poll.id }},
         title: title, date_of_begin: date_of_begin, date_of_end: date_of_end, description: description,
         questions:JSON.stringify( questions ) } );
-
         {% else %}
-
-
         $.post( "/admin/new_poll", { csrfmiddlewaretoken: CSRFtoken,
         title: title, date_of_begin: date_of_begin, date_of_end: date_of_end, description: description,
          questions:JSON.stringify( questions )});
         {% endif %}
+        window.location.replace('/admin');
         } else {alert('Введите текст вопроса, пожалуйста.');}
         } else {alert('Введите названия опроса, пожалуйста.');
         }
+
 });
+
     </script>
 
 
@@ -241,7 +230,8 @@ border-radius: 5px 5px 5px 5px;
 
 
 
-<button class="save" style="float: right;">Сохранить</button></div>
+<button type="submit" class="save" style="float: right;">Сохранить</button></div>
+    <input type="hidden" name="next" value="{{ request.path }}">
     {% for question in poll.questions %}
 <div><div class="question_form"><div style="background-color:white;">
         <div class="question_div"> <h3 class="question_number" style="

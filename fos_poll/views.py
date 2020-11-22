@@ -107,11 +107,10 @@ class EditPollView(TemplateView):
         return context
 
     def post(self, request, *args, **kwargs):
-        id = request.POST.get('id')
+        poll_id = request.POST.get('id')
 
-        print('id',id)
-        if id:
-            poll = Poll.objects.filter(id=id)[0]
+        if poll_id:
+            poll = Poll.objects.filter(id=poll_id)[0]
             old_questions = Question.objects.filter(poll=poll)
             if old_questions.count():
                 for old_question in old_questions:
