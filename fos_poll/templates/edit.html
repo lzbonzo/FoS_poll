@@ -70,7 +70,30 @@ border-radius: 5px 5px 5px 5px;
                                     font-weight: normal;
                                     text-shadow: black 0 0 5px;
 }
-
+.question_number {
+padding-left: 10px;
+margin-top: 5px;
+margin-bottom: 5px;
+font-weight: normal;
+}
+.question_data {
+        overflow: hidden;
+        padding: 10px;
+        font-size: 13px;
+        border-bottom: 1px solid #eee;
+        background-color: rgba(0, 120, 201, 0.2);
+}
+.poll_save {
+        display: flex;
+        justify-content: space-between;
+        background: #4080bf;
+        padding-top: 5px;
+        padding-right: 5px;
+}
+.poll_data {
+        background-color: rgba(0, 120, 201, 0.2);
+        margin-bottom: 0px;
+}
 </style>
 
 <script>
@@ -86,27 +109,21 @@ border-radius: 5px 5px 5px 5px;
     $("h3.question_number").each(function(index, obj) {
     var headertext = 'Вопрос ' + (index + 1);
     $(obj).html(headertext);
-});
+    });
+    $(".question_form").each(function(i,o) {$(o).attr('id', 'question' + (i + 1))});
     }
+</script>
+<script>
     $(document).ready(function() {
     var wrapper = $(".questions_container");
     var add_button = $(".add_form_field");
 
-
     $(add_button).click(function(e) {
-        e.preventDefault();
-        $(wrapper).append('<div class="question_form"><div style="background-color:white;"> \
-        <div class="question_div"> <h3 class="question_number" style=" \
-        padding-left: 10px; margin-top: 5px; margin-bottom: 5px; font-weight: normal;"> \
-        <span></span></h3> \
-        <span class="delete">&times;</span></div> \
-        </div>\
-        <div style=" \
-        overflow: hidden; \
-        padding: 10px; \
-        font-size: 13px; \
-        border-bottom: 1px solid #eee; \
-        background-color: rgba(0, 120, 201, 0.2); "> \
+    e.preventDefault();
+    $(wrapper).append('<div class="question_form"><div style="background-color:white;"> \
+    <div class="question_div"> <h3 class="question_number"></h3> \
+    <span class="delete">&times;</span></div></div> \
+    <div class="question_data"> \
     <textarea id="question_text" name="question_text">Введите текст вопроса</textarea> \
     <p><label for="answer_type">Тип ответа</label> \
     <select name="answer_type" id="answer_type"> \
@@ -114,20 +131,15 @@ border-radius: 5px 5px 5px 5px;
         <option>{{ type.1 }}</option> \
     {% endfor %} \
     </select> \
-    </p> \
+    </p>\
     </div></div>'); //add input box
-
-
-
-    $(".question_form").each(function(i,o) {$(o).attr('id', 'question' + (i + 1))});
     changeNumbers();
     });
 
     $(wrapper).on("click", ".delete", function(e) {
-        e.preventDefault();
-       $(this).parents('.question').remove();
-       changeNumbers();
-
+    e.preventDefault();
+    $(this).parents('.question_form').remove();
+    changeNumbers();
     });
 });
 </script>
@@ -186,13 +198,54 @@ border-radius: 5px 5px 5px 5px;
         } else {alert('Введите текст вопроса, пожалуйста.');}
         } else {alert('Введите названия опроса, пожалуйста.');
         }
-
 });
+</script>
+<script>
+    function addOptionsFields(obj) {
+    var answerType = $(obj).parents(".question_form").find("#answer_type").val();
+    $(obj).parents(".question_form").find(".answerOption").remove();
+    var options = $(obj).parents(".question_form").find(".answer_options_count").val();
+    for (i = 1; i <= options; i++) {
+    var label = "Вариант " + i;
+    $(obj).parents(".answersForm").append('<div class="answerOption" id="answerOption' + i +'">\
+    <label for="option">' + label + '<input name="option"/><input class="answer" name="answer" value="' + i + '"></div>');}
+    if (answerType == "Выбрать один") {
+    $(obj).parents(".question_form").find(".answer").attr("type", "radio");
+    }
+    else
+    {
+    $(obj).parents(".question_form").find(".answer").attr("type", "checkbox");
+    }
+   };
+</script>
+<script>
+    $(document).on("change", "#answer_type", function(e) {
+    e.preventDefault();
+    var questionData = $(this).parents(".question_data");
+    $(questionData).find('.answersForm').remove();
+    $(questionData).append('<div name="answersDiv"><form class="answersForm"></form></div>');
+    var answersForm = $(questionData).find('.answersForm');
+    var answerType = (questionData).find("#answer_type").val();
 
-    </script>
+    if (answerType == "Текст") {
+    $(answersForm).append('<div><label for="right_answer">Введите правильный ответ</label>\
+    <input type="text" name="right_answer" class="right_answer"></div>');
+    }
 
+    else if (answerType == "Выбрать один") {
+    $(answersForm).append('<div><label for="answer_options_count">Количество вариантов</label>\
+    <input type="text" name="answer_options_count" class="answer_options_count">\
+    <button type="button" onclick="addOptionsFields(this)">OK</button></div>');}
 
-<form style="background-color: rgba(0, 120, 201, 0.2); margin-bottom: 0px;" >{% csrf_token %}
+    else {
+     $(answersForm).append('<div><label for="answer_options_count">Количество вариантов</label>\
+    <input type="text" name="answer_options_count" class="answer_options_count">\
+    <button type="button" onclick="addOptionsFields(this)">OK</button></div>');
+    }
+    });
+</script>
+
+<form class="poll_data">{% csrf_token %}
     <table width="100%" cellspacing="0" cellpadding="4">
     <tr>
         <td align="left" width="100"><label class="field_label" for="title">Название: </label></td>
@@ -222,8 +275,7 @@ border-radius: 5px 5px 5px 5px;
 
 <div class="questions_container">
 
-    <div style="display: flex;
-  justify-content: space-between; background: #4080bf; padding-top: 5px; padding-right: 5px;">
+    <div class="poll_save">
 
     <h3 class="questions_header">ВОПРОСЫ</h3>
     <input type="hidden" id="id" name="id" value="{{ poll.id }}">
@@ -233,18 +285,12 @@ border-radius: 5px 5px 5px 5px;
 <button type="submit" class="save" style="float: right;">Сохранить</button></div>
     <input type="hidden" name="next" value="{{ request.path }}">
     {% for question in poll.questions %}
-<div><div class="question_form"><div style="background-color:white;">
-        <div class="question_div"> <h3 class="question_number" style="
-        padding-left: 10px; margin-top: 5px; margin-bottom: 5px; font-weight: normal;">
+<div class="question_form"><div style="background-color:white;">
+        <div class="question_div"> <h3 class="question_number">
         <span></span></h3>
         <span class="delete">&times;</span></div>
         </div>
-        <div style="
-        overflow: hidden;
-        padding: 10px;
-        font-size: 13px;
-        border-bottom: 1px solid #eee;
-        background-color: rgba(0, 120, 201, 0.2); ">
+        <div class="question_data">
     <textarea id="question_text" name="question_text">{{ question.text }}</textarea>
     <p><label for="answer_type">Тип ответа</label>
     <select name="answer_type" id="answer_type">
@@ -259,8 +305,8 @@ border-radius: 5px 5px 5px 5px;
     </p>
         </div></div></div>
     {% endfor %}
-<script>$(".question_form").each(function(i,o) {$(o).attr('id', 'question' + (i + 1))}); changeNumbers();</script>
-</div>
+<script>changeNumbers();</script>
+
 </form>
 
 
