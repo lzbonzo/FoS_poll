@@ -2,12 +2,35 @@ import json
 from datetime import datetime
 
 from django.contrib.auth import authenticate, login, logout
+from django.http import HttpResponseRedirect
 from django.shortcuts import render, redirect
+
 
 # Create your views here.
 from django.views.generic import TemplateView
 
 from fos_poll.models import Poll, Question
+from fos_poll.forms import PollForm, QuestionForm, QuestionFormSet
+
+
+class PollFormView(TemplateView):
+    template_name = 'form.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        poll = Poll.objects.get(id=1)
+        context['poll_form'] = PollForm(instance=poll)
+        context['questions'] = QuestionFormSet(queryset=Question.objects.filter(poll=poll))
+        return context
+
+    def post(self, request):
+        poll_form = PollForm(request.POST)
+        context = self.get_context_data()
+        if poll_form.is_valid():
+            Poll.objects.create(**poll_form.cleaned_data())
+            return HttpResponseRedirect('/admin/')
+        return self.render_to_response(context)
+
 
 
 class About(TemplateView):
@@ -89,51 +112,55 @@ class EditPollView(TemplateView):
 
     def get_context_data(self, poll_id=-1, **kwargs):
         context = super().get_context_data(**kwargs)
-        current_poll_data = {}
         poll = Poll.objects.filter(id=poll_id)
+
         if poll.count():
             poll = poll[0]
-            current_poll_data['title'] = poll.title
-            current_poll_data['description'] = poll.description
-            current_poll_data['date_of_begin'] = datetime.strftime(poll.date_of_begin, '%d-%m-%Y')
-            current_poll_data['date_of_end'] = datetime.strftime(poll.date_of_end, '%d-%m-%Y')
-            current_poll_data['id'] = poll.id
-            questions = Question.objects.filter(poll=poll)
-            current_poll_data['questions'] = questions
+            context['page_title'] = f'Опрос № {poll_id}'
+        else:
+            poll = Poll()
+            context['page_title'] = 'Новый опрос'
 
-        answer_types = Question()._meta.get_field('answer_type').choices
-        current_poll_data['answer_types'] = answer_types
-        context['poll'] = current_poll_data
+        context['poll_id'] = poll.pk
+        context['poll_form'] = PollForm(instance=poll)
+        questions = Question.objects.filter(poll=poll)
+        context['questions'] = QuestionFormSet(queryset=questions)
         return context
 
     def post(self, request, *args, **kwargs):
-        poll_id = request.POST.get('id')
-
+        poll_id = request.POST.get('poll_id')
         if poll_id:
-            poll = Poll.objects.filter(id=poll_id)[0]
-            old_questions = Question.objects.filter(poll=poll)
-            if old_questions.count():
-                for old_question in old_questions:
-                    old_question.delete()
-        else:
-            poll = Poll()
-            poll.date_of_begin = datetime.strftime(
-                datetime.strptime(request.POST.get('date_of_begin'), '%d-%m-%Y'), '%Y-%m-%d')
-        poll.title = request.POST.get('title')
-        poll.description = request.POST.get('description')
-        poll.date_of_end = datetime.strftime(datetime.strptime(request.POST.get('date_of_end'), '%d-%m-%Y'), '%Y-%m-%d')
-        poll.save()
-        questions = json.loads(request.POST.get('questions'))
-        if questions:
-            for every_question, question_info in questions.items():
-                question = Question()
-                question.answer_type = question_info.get('answer_type')
-                question.text = question_info.get('text')
-                question.poll = poll
-                question.save()
+            user = request.user
+            if request.method == 'POST':
+                form = PollForm(request.POST)
+                if form.is_valid():
+                    form.save()
+
+            # TODO post form
+            # poll = Poll.objects.filter(id=poll_id)[0]
+            # old_questions = Question.objects.filter(poll=poll)
+            # if old_questions.count():
+            #     for old_question in old_questions:
+            #         old_question.delete()
+        # else:
+        #     poll = Poll()
+        #     poll.date_of_begin = datetime.strftime(
+        #         datetime.strptime(request.POST.get('date_of_begin'), '%d-%m-%Y'), '%Y-%m-%d')
+        # poll.title = request.POST.get('title')
+        # poll.description = request.POST.get('description')
+        # poll.date_of_end = datetime.strftime(datetime.strptime(request.POST.get('date_of_end'), '%d-%m-%Y'), '%Y-%m-%d')
+        # poll.save()
+        # questions = json.loads(request.POST.get('questions'))
+        # if questions:
+        #     for every_question, question_info in questions.items():
+        #         question = Question()
+        #         question.answer_type = question_info.get('answer_type')
+        #         question.text = question_info.get('text')
+        #         question.poll = poll
+        #         question.save()
 
         context = self.get_context_data(message='Poll added',
-                                        poll_id=poll.id)
+                                        poll_id=poll_id)
         return self.render_to_response(context)
 
 

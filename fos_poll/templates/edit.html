@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 
-{% block title %}Опрос № {{ id }}{% endblock %}
+{% block title %}{{ page_title }}{% endblock %}
 
 {% block left_link %} <a href="/admin/" class="header">Опросы</a> {% endblock %}
 {% block content %}
@@ -95,13 +95,29 @@ font-weight: normal;
         margin-bottom: 0px;
 }
 </style>
-
 <script>
-    $(function(){
-    {% if not poll.date_of_begin %}
-    $("#date_of_begin").datepicker({ dateFormat: 'dd-mm-yy' });
+<!--Format date-->
+    function formatDate(date_to_format) {
+    var date=new Date(date_to_format);
+    var month = date.getMonth() + 1;
+    var day = date.getDate();
+    var year = date.getFullYear();
+    var formattedDate = day + "." + month + "." + year
+    return formattedDate;
+    };
+
+    $(document).ready( function() {
+    $("#id_date_of_begin").attr('value', formatDate($("#id_date_of_begin").val()));
+    $("#id_date_of_end").attr('value', formatDate($("#id_date_of_end").val()));
+    });
+</script>
+<script>
+<!--Datepicker-->
+    $(document).ready(function(){
+    {% if not poll_form.date_of_begin %}
+    $("#id_date_of_begin").datepicker({ dateFormat: 'dd.mm.yy' });
     {% endif %}
-    $("#date_of_end").datepicker({ dateFormat: 'dd-mm-yy' });
+    $("#id_date_of_end").datepicker({ dateFormat: 'dd.mm.yy' });
     });
 </script>
 <script>
@@ -113,7 +129,9 @@ font-weight: normal;
     $(".question_form").each(function(i,o) {$(o).attr('id', 'question' + (i + 1))});
     }
 </script>
+
 <script>
+<!--Add question-->
     $(document).ready(function() {
     var wrapper = $(".questions_container");
     var add_button = $(".add_form_field");
@@ -127,30 +145,41 @@ font-weight: normal;
     <textarea id="question_text" name="question_text">Введите текст вопроса</textarea> \
     <p><label for="answer_type">Тип ответа</label> \
     <select name="answer_type" id="answer_type"> \
-    {% for type in poll.answer_types %} \
-        <option>{{ type.1 }}</option> \
+    {% for t in questions.empty_form.fields.answer_type.choices %} \
+    <option value="{{ t.0 }}">{{ t.1 }}</option> \
     {% endfor %} \
     </select> \
     </p>\
     </div></div>'); //add input box
     changeNumbers();
+    var questionData = $('.question_data').last();
+    answerOptions(questionData);
     });
-
-    $(wrapper).on("click", ".delete", function(e) {
+});
+</script>
+<script>
+<!--Delete button-->
+    $(document).on("click", ".delete", function(e) {
     e.preventDefault();
     $(this).parents('.question_form').remove();
     changeNumbers();
     });
-});
 </script>
-{% if not poll.date_of_begin %}
+{% if not poll_form.date_of_begin.value %}
+<!--Default dates-->
     <script>
         var dt = new Date();
         var dt_str = dt.toLocaleDateString();
-        var dt_replaced = dt_str.replace(/\./g, '-');
         $(document).ready(function(){
-        $('#date_of_begin').attr("value", dt_replaced);
-        $('#date_of_end').attr("value", dt_replaced);
+        $('#id_date_of_begin').attr("value", dt_str);
+        $('#id_date_of_end').attr("value", dt_str);
+        });
+    </script>
+{% else %}
+<!--Readonly date of begin-->
+    <script>
+        $(document).ready(function() {
+        $("#id_date_of_begin").attr("readonly", true);
         });
     </script>
 {% endif %}
@@ -159,14 +188,15 @@ font-weight: normal;
     var i = true;
     $(".question_form").each(function(index, obj) {
     if (!$(obj).find("textarea").val())
-    {alert('empty'); i = false; return false;}
+    {i = false; return false;}
     });
     return i;
 }
 </script>
 <script>
+<!--Save button-->
     $(document).on("click", ".save", function(e) {
-        if ($(document).find("#title").val()) {
+        if ($(document).find("#id_title").val()) {
         e.preventDefault();
 
         if (notIsEmpty()) {
@@ -185,8 +215,8 @@ font-weight: normal;
         var id = $(obj).attr('id');
         questions[id]= question_info;
         } );
-        {% if poll.id %}
-        $.post( "/admin/{{ poll.id }}", { csrfmiddlewaretoken: CSRFtoken, id: {{ poll.id }},
+        {% if poll_id %}
+        $.post( "/admin/{{ poll_id }}", { csrfmiddlewaretoken: CSRFtoken, poll_id: "{{ poll_id }}",
         title: title, date_of_begin: date_of_begin, date_of_end: date_of_end, description: description,
         questions:JSON.stringify( questions ) } );
         {% else %}
@@ -201,15 +231,16 @@ font-weight: normal;
 });
 </script>
 <script>
+<!--Add question button-->
     function addOptionsFields(obj) {
-    var answerType = $(obj).parents(".question_form").find("#answer_type").val();
+    var answerType = $(obj).parents(".question_form").find("select").val();
     $(obj).parents(".question_form").find(".answerOption").remove();
     var options = $(obj).parents(".question_form").find(".answer_options_count").val();
     for (i = 1; i <= options; i++) {
     var label = "Вариант " + i;
     $(obj).parents(".answersForm").append('<div class="answerOption" id="answerOption' + i +'">\
     <label for="option">' + label + '<input name="option"/><input class="answer" name="answer" value="' + i + '"></div>');}
-    if (answerType == "Выбрать один") {
+    if (answerType == "o") {
     $(obj).parents(".question_form").find(".answer").attr("type", "radio");
     }
     else
@@ -219,20 +250,19 @@ font-weight: normal;
    };
 </script>
 <script>
-    $(document).on("change", "#answer_type", function(e) {
-    e.preventDefault();
-    var questionData = $(this).parents(".question_data");
+    function answerOptions(questionData) {
+
     $(questionData).find('.answersForm').remove();
     $(questionData).append('<div name="answersDiv"><form class="answersForm"></form></div>');
     var answersForm = $(questionData).find('.answersForm');
-    var answerType = (questionData).find("#answer_type").val();
+    var answerType = (questionData).find("select").val();
 
-    if (answerType == "Текст") {
+    if (answerType == "t") {
     $(answersForm).append('<div><label for="right_answer">Введите правильный ответ</label>\
     <input type="text" name="right_answer" class="right_answer"></div>');
     }
 
-    else if (answerType == "Выбрать один") {
+    else if (answerType == "o") {
     $(answersForm).append('<div><label for="answer_options_count">Количество вариантов</label>\
     <input type="text" name="answer_options_count" class="answer_options_count">\
     <button type="button" onclick="addOptionsFields(this)">OK</button></div>');}
@@ -242,73 +272,64 @@ font-weight: normal;
     <input type="text" name="answer_options_count" class="answer_options_count">\
     <button type="button" onclick="addOptionsFields(this)">OK</button></div>');
     }
+    };
+</script>
+<script>
+<!--Answer options on ready-->
+    $(document).ready( function() {
+    $("select").each( function(obj) {
+    var questionData = $(this).parents(".question_data");
+    answerOptions(questionData);
+    });
+    });
+</script>
+<script>
+<!--Answer options on change-->
+    $(document).on("change", "select", function(e) {
+    e.preventDefault();
+    var questionData = $(this).parents(".question_data");
+    answerOptions(questionData);
     });
 </script>
 
 <form class="poll_data">{% csrf_token %}
-    <table width="100%" cellspacing="0" cellpadding="4">
-    <tr>
-        <td align="left" width="100"><label class="field_label" for="title">Название: </label></td>
-        <td><input type="text" id="title" name="title" required value="{{ poll.title }}"/></td>
-    </tr>
-    <tr>
-        <td align="left" width="100"><label class="field_label" for="date_of_begin">Дата начала: </label>
-        {% if poll.date_of_begin %}
-        <td><input type="date" id="date_of_begin" name="date_of_begin" value="{{ poll.date_of_begin }}" readonly/></td>
-        {% else %}
-        <td><input type="date" id="date_of_begin" required name="date_of_begin" value="{{ poll.date_of_begin }}"/></td>
-        {% endif %}
-    </tr>
-    <tr>
-        <td align="left" width="100"><label class="field_label" for="date_of_end">Дата окончания: </label></td>
-        <td><input type="date" id="date_of_end" required name="date_of_end" value="{{ poll.date_of_end }}"/></td>
-    </tr>
-    <tr>
-        <td align="left" width="100"><label class="field_label" for="description">Описание: </label></td>
-        <td><textarea id="description" name="description">{{ poll.description }}</textarea></td>
-    </tr>
-    <tr>
-        <td></td>
-    </tr>
-    </table>
-
+     <table width="100%" cellspacing="0" cellpadding="4">
+    {% for field in poll_form %}
+         <tr>
+             <td align="left" width="100">{{ field.label }}</td>
+             <td>{{ field }}</td>
+         </tr>
+   {% endfor %}
+     </table>
+</form>
 
 <div class="questions_container">
 
     <div class="poll_save">
 
     <h3 class="questions_header">ВОПРОСЫ</h3>
-    <input type="hidden" id="id" name="id" value="{{ poll.id }}">
-
 
 
 <button type="submit" class="save" style="float: right;">Сохранить</button></div>
     <input type="hidden" name="next" value="{{ request.path }}">
-    {% for question in poll.questions %}
+
+    {% for question in questions %}
+
 <div class="question_form"><div style="background-color:white;">
         <div class="question_div"> <h3 class="question_number">
         <span></span></h3>
         <span class="delete">&times;</span></div>
         </div>
         <div class="question_data">
-    <textarea id="question_text" name="question_text">{{ question.text }}</textarea>
-    <p><label for="answer_type">Тип ответа</label>
-    <select name="answer_type" id="answer_type">
-    {% for type in poll.answer_types %}
-        {% if type.1 != question.get_answer_type_display %}
-        <option>{{ type.1 }}</option>
-        {% endif %}
-
-    {% endfor %}
-        <option selected="selected" >{{ question.get_answer_type_display }}</option>
-    </select>
+   {{ question.text }}
+    <p><label>Тип ответа</label>
+   {{ question.answer_type }}
     </p>
-        </div></div></div>
+      </div></div>
     {% endfor %}
 <script>changeNumbers();</script>
 
-</form>
 
-
+</div>
 <button class="add_form_field">Добавить вопрос &nbsp;<span>+ </span></button>
 {% endblock %}
