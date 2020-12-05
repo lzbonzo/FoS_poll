@@ -1,8 +1,5 @@
 from django.db import models
-from django.forms import ModelChoiceField, Form, ChoiceField, Select
 
-
-# Create your models here.
 
 class Poll(models.Model):
     title = models.CharField(max_length=50)
@@ -19,3 +16,8 @@ class Question(models.Model):
     poll = models.ForeignKey('Poll', on_delete=models.CASCADE, default=None)
 
 
+class Answer(models.Model):
+
+    answer = models.CharField(max_length=50)
+    is_right = models.BooleanField()
+    question = models.ForeignKey('Question', on_delete=models.CASCADE, default=None)

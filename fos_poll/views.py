@@ -1,36 +1,12 @@
-import json
-from datetime import datetime
-
 from django.contrib.auth import authenticate, login, logout
-from django.http import HttpResponseRedirect
 from django.shortcuts import render, redirect
 
 
 # Create your views here.
 from django.views.generic import TemplateView
 
-from fos_poll.models import Poll, Question
-from fos_poll.forms import PollForm, QuestionForm, QuestionFormSet
-
-
-class PollFormView(TemplateView):
-    template_name = 'form.html'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        poll = Poll.objects.get(id=1)
-        context['poll_form'] = PollForm(instance=poll)
-        context['questions'] = QuestionFormSet(queryset=Question.objects.filter(poll=poll))
-        return context
-
-    def post(self, request):
-        poll_form = PollForm(request.POST)
-        context = self.get_context_data()
-        if poll_form.is_valid():
-            Poll.objects.create(**poll_form.cleaned_data())
-            return HttpResponseRedirect('/admin/')
-        return self.render_to_response(context)
-
+from fos_poll.models import Poll, Question, Answer
+from fos_poll.forms import PollForm, QuestionForm, AnswerFormSet
 
 
 class About(TemplateView):
@@ -121,22 +97,27 @@ class EditPollView(TemplateView):
             poll = Poll()
             context['page_title'] = 'Новый опрос'
 
+        # context['answers'] = AnswersForm(instance=Question.objects.filter(id=4)[0].answers)
         context['poll_id'] = poll.pk
         context['poll_form'] = PollForm(instance=poll)
-        questions = Question.objects.filter(poll=poll)
-        context['questions'] = QuestionFormSet(queryset=questions)
+        context['question_empty_form'] = QuestionForm
+        questions_query_set = Question.objects.filter(poll=poll)
+        questions = []
+        for q in questions_query_set:
+            questions.append({"question_form": QuestionForm(instance=q), "answers": AnswerFormSet(instance=q)})
+        context['questions'] = questions
         return context
 
-    def post(self, request, *args, **kwargs):
-        poll_id = request.POST.get('poll_id')
+    def post(self, request, poll_id, **kwargs):
         if poll_id:
             user = request.user
+            poll = Poll.objects.get(id=poll_id)
             if request.method == 'POST':
-                form = PollForm(request.POST)
+                form = PollForm(request.POST, instance=poll)
                 if form.is_valid():
                     form.save()
 
-            # TODO post form
+            # TODO post form`
             # poll = Poll.objects.filter(id=poll_id)[0]
             # old_questions = Question.objects.filter(poll=poll)
             # if old_questions.count():

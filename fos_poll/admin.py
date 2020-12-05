@@ -1,27 +1,24 @@
 from django.contrib import admin
-from django.contrib.admin import AdminSite
-from django.db import models
-from django.forms import ChoiceField, Form, Select
 
 # Register your models here.
-from django.utils.html import format_html
+from fos_poll.models import Poll, Question, Answer
 
-from fos_poll.models import Poll, Question
+
+class AnswerInline(admin.StackedInline):
+    model = Answer
+    extra = 0
+    can_delete = True
 
 
 class QuestionInline(admin.StackedInline):
     model = Question
     extra = 0
     can_delete = True
-    # TODO сделать кнопку удаления вопроса прямо из опроса
-    #  - Авторизация в системе
-    #  - Подумать над интерфейсом для админа (нужна авторизация, возможно оставить джанговскую авторизацию
 
 
-
-
-    def delete_button(self, obj):
-        return format_html('<a class="btn" href="/admin/fos_poll/my_model/{}/delete/">Delete</a>', obj.id)
+class QuestionAdmin(admin.ModelAdmin):
+    list_display = ['text', 'answer_type']
+    inlines = [AnswerInline]
 
 
 class PollAdmin(admin.ModelAdmin):
@@ -35,10 +32,6 @@ class PollAdmin(admin.ModelAdmin):
         return self.readonly_fields
 
 
-
-
-
-
 admin.site.register(Poll, PollAdmin)
-admin.site.register(Question)
-
+admin.site.register(Question, QuestionAdmin)
+admin.site.register(Answer)

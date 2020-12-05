@@ -5,16 +5,19 @@
 
 {% block left_link %} <a href="/admin/" class="header">Опросы</a> {% endblock %}
 {% block content %}
-
-
-
+{% load static %}
+<link rel="shortcut icon" href="{% static 'images/favicon.ico' %}" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="manifest" href="/site.webmanifest">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
 <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 <style>
 
-.question_div {
+.questionDiv {
   display: flex;
   justify-content: space-between;
 }
@@ -24,6 +27,17 @@
     font-weight: bold;
     float: right;
     font-size: 26px;
+    line-height: 20px;
+    cursor: pointer;
+    transition: 0.3s;
+    display: inline;
+    padding-right: 0.3em;
+    margin-top: 5px;
+}
+.deleteOption {
+    color: black;
+    font-weight: bold;
+    font-size: 15px;
     line-height: 20px;
     cursor: pointer;
     transition: 0.3s;
@@ -59,7 +73,7 @@ border-radius: 5px 5px 5px 5px;
    color: black;
    background-color: rgb(179, 255, 179);
 }
-.questions_header {
+.questionsHeader {
   background: #4080bf;
                                     margin-bottom: 0px;
                                     margin-top: 0px;
@@ -70,27 +84,27 @@ border-radius: 5px 5px 5px 5px;
                                     font-weight: normal;
                                     text-shadow: black 0 0 5px;
 }
-.question_number {
+.questionNumber {
 padding-left: 10px;
 margin-top: 5px;
 margin-bottom: 5px;
 font-weight: normal;
 }
-.question_data {
+.questionData {
         overflow: hidden;
         padding: 10px;
         font-size: 13px;
         border-bottom: 1px solid #eee;
         background-color: rgba(0, 120, 201, 0.2);
 }
-.poll_save {
+.pollSave {
         display: flex;
         justify-content: space-between;
         background: #4080bf;
         padding-top: 5px;
         padding-right: 5px;
 }
-.poll_data {
+.pollData {
         background-color: rgba(0, 120, 201, 0.2);
         margin-bottom: 0px;
 }
@@ -114,54 +128,60 @@ font-weight: normal;
 <script>
 <!--Datepicker-->
     $(document).ready(function(){
-    {% if not poll_form.date_of_begin %}
     $("#id_date_of_begin").datepicker({ dateFormat: 'dd.mm.yy' });
-    {% endif %}
     $("#id_date_of_end").datepicker({ dateFormat: 'dd.mm.yy' });
     });
 </script>
 <script>
     function changeNumbers() {
-    $("h3.question_number").each(function(index, obj) {
+    $("h3.questionNumber").each(function(index, obj) {
     var headertext = 'Вопрос ' + (index + 1);
     $(obj).html(headertext);
     });
-    $(".question_form").each(function(i,o) {$(o).attr('id', 'question' + (i + 1))});
+    $(".questionForm").each(function(i,o) {$(o).attr('id', 'question' + (i + 1))});
     }
 </script>
 
 <script>
 <!--Add question-->
     $(document).ready(function() {
-    var wrapper = $(".questions_container");
-    var add_button = $(".add_form_field");
+    var wrapper = $(".questionsContainer");
+    var add_button = $(".addFormField");
 
     $(add_button).click(function(e) {
     e.preventDefault();
-    $(wrapper).append('<div class="question_form"><div style="background-color:white;"> \
-    <div class="question_div"> <h3 class="question_number"></h3> \
+    $(wrapper).append('<div class="questionForm"><div style="background-color:white;"> \
+    <div class="questionDiv"> <h3 class="questionNumber"></h3> \
     <span class="delete">&times;</span></div></div> \
-    <div class="question_data"> \
+    <div class="questionData"> \
     <textarea id="question_text" name="question_text">Введите текст вопроса</textarea> \
     <p><label for="answer_type">Тип ответа</label> \
     <select name="answer_type" id="answer_type"> \
-    {% for t in questions.empty_form.fields.answer_type.choices %} \
+    {% for t in question_empty_form.fields.answer_type.choices %} \
     <option value="{{ t.0 }}">{{ t.1 }}</option> \
     {% endfor %} \
     </select> \
-    </p>\
+    </p><div class="answers"></div>\
     </div></div>'); //add input box
     changeNumbers();
-    var questionData = $('.question_data').last();
+    var questionData = $('.questionData').last();
     answerOptions(questionData);
     });
 });
 </script>
 <script>
-<!--Delete button-->
+<!--Delete question-->
     $(document).on("click", ".delete", function(e) {
     e.preventDefault();
-    $(this).parents('.question_form').remove();
+    $(this).parents('.questionForm').remove();
+    changeNumbers();
+    });
+</script>
+<script>
+<!--Delete option-->
+    $(document).on("click", ".deleteOption", function(e) {
+    e.preventDefault();
+    $(this).parents().remove();
     changeNumbers();
     });
 </script>
@@ -186,7 +206,7 @@ font-weight: normal;
 <script>
     function notIsEmpty() {
     var i = true;
-    $(".question_form").each(function(index, obj) {
+    $(".questionForm").each(function(index, obj) {
     if (!$(obj).find("textarea").val())
     {i = false; return false;}
     });
@@ -202,12 +222,12 @@ font-weight: normal;
         if (notIsEmpty()) {
         var CSRFtoken = $('input[name=csrfmiddlewaretoken]').val();
         var questions = {};
-        var title =  $(document).find("#title").val();
-        var date_of_begin =  $(document).find("#date_of_begin").val();
-        var date_of_end =  $(document).find("#date_of_end").val();
-        var description =  $(document).find("#description").val();
+        var title =  $(document).find("#id_title").val();
+        var date_of_begin =  $(document).find("#id_date_of_begin").val();
+        var date_of_end =  $(document).find("#id_date_of_end").val();
+        var description =  $(document).find("#id_description").val();
 
-        $("div.question_form").each(function(index, obj) {
+        $("div.questionForm").each(function(index, obj) {
 
         var question_text = $(obj).find("textarea").val();
         var answer_type = $(obj).find("select").val();
@@ -216,7 +236,7 @@ font-weight: normal;
         questions[id]= question_info;
         } );
         {% if poll_id %}
-        $.post( "/admin/{{ poll_id }}", { csrfmiddlewaretoken: CSRFtoken, poll_id: "{{ poll_id }}",
+        $.post( "/admin/{{ poll_id }}", { csrfmiddlewaretoken: CSRFtoken, poll_id: {{ poll_id }},
         title: title, date_of_begin: date_of_begin, date_of_end: date_of_end, description: description,
         questions:JSON.stringify( questions ) } );
         {% else %}
@@ -233,44 +253,52 @@ font-weight: normal;
 <script>
 <!--Add question button-->
     function addOptionsFields(obj) {
-    var answerType = $(obj).parents(".question_form").find("select").val();
-    $(obj).parents(".question_form").find(".answerOption").remove();
-    var options = $(obj).parents(".question_form").find(".answer_options_count").val();
-    for (i = 1; i <= options; i++) {
-    var label = "Вариант " + i;
-    $(obj).parents(".answersForm").append('<div class="answerOption" id="answerOption' + i +'">\
-    <label for="option">' + label + '<input name="option"/><input class="answer" name="answer" value="' + i + '"></div>');}
+    var answersForm = $(obj).parents(".questionForm").find('.answersForm');
+    var answerType = $(obj).parents(".questionForm").find("select").val();
+    $(obj).parents(".questionForm").find(".answerOption").remove();
+    var answers = $(obj).parents(".questionForm").find(".answers")
+    $(answersForm).append('<br><input type="text">\
+    <input class="answer" name="answer" value=""><span class="deleteOption">  &times;</span></div><br>');
     if (answerType == "o") {
-    $(obj).parents(".question_form").find(".answer").attr("type", "radio");
+    $(obj).parents(".questionForm").find(".answer").attr("type", "radio");
     }
     else
     {
-    $(obj).parents(".question_form").find(".answer").attr("type", "checkbox");
+    $(obj).parents(".questionForm").find(".answer").attr("type", "checkbox");
     }
+    changeOptionsNumbers();
    };
 </script>
 <script>
     function answerOptions(questionData) {
-
-    $(questionData).find('.answersForm').remove();
-    $(questionData).append('<div name="answersDiv"><form class="answersForm"></form></div>');
+    $(questionData).find('.addOptionDiv').remove();
     var answersForm = $(questionData).find('.answersForm');
     var answerType = (questionData).find("select").val();
-
+    var first = $(questionData).parents(".questionForm").find("input[type='text']").first();
     if (answerType == "t") {
-    $(answersForm).append('<div><label for="right_answer">Введите правильный ответ</label>\
-    <input type="text" name="right_answer" class="right_answer"></div>');
+    $(answersForm).contents().remove();
+    if (!first.val()) {
+    $(answersForm).append('<label for="right_answer">Введите правильный ответ</label>\
+    <input type="text" name="right_answer" class="right_answer">');}
+    else {
+    $(answersForm).append('<label for="right_answer">Введите правильный ответ</label>\
+    <input type="text" name="right_answer" class="right_answer" value="' + first.val() + '">');}
     }
 
-    else if (answerType == "o") {
-    $(answersForm).append('<div><label for="answer_options_count">Количество вариантов</label>\
-    <input type="text" name="answer_options_count" class="answer_options_count">\
-    <button type="button" onclick="addOptionsFields(this)">OK</button></div>');}
-
     else {
-     $(answersForm).append('<div><label for="answer_options_count">Количество вариантов</label>\
-    <input type="text" name="answer_options_count" class="answer_options_count">\
-    <button type="button" onclick="addOptionsFields(this)">OK</button></div>');
+
+        if (!$(answersForm).find("input[type='checkbox']").length &&
+        !$(answersForm).find("input[type='radio']").length )  {
+        {$(answersForm).append(' <input type="checkbox"><span class="deleteOption">  &times;</span><br>');}}
+        if (answerType == "o") {
+        $(questionData).parents(".questionForm").find("input[type='checkbox']").attr("type", "radio");}
+
+        else {
+        $(questionData).parents(".questionForm").find("input[type='radio']").attr("type", "checkbox");}
+        $(questionData).parents(".questionForm").find("input[type='radio']").attr("name", "answer");
+    if (!$(questionData).find('.addOptionDiv').length) {
+    $(questionData).append('<div class="addOptionDiv"><br><button type="button" class="addOption"\
+    onclick="addOptionsFields(this)">Добавить вариант</button></div>');}
     }
     };
 </script>
@@ -278,7 +306,7 @@ font-weight: normal;
 <!--Answer options on ready-->
     $(document).ready( function() {
     $("select").each( function(obj) {
-    var questionData = $(this).parents(".question_data");
+    var questionData = $(this).parents(".questionData");
     answerOptions(questionData);
     });
     });
@@ -287,49 +315,78 @@ font-weight: normal;
 <!--Answer options on change-->
     $(document).on("change", "select", function(e) {
     e.preventDefault();
-    var questionData = $(this).parents(".question_data");
+    var questionData = $(this).parents(".questionData");
     answerOptions(questionData);
+    changeOptionsNumbers();
+    });
+</script>
+<script>
+    <!--Change options numbers-->
+    function changeOptionsNumbers() {
+    var i = 0;
+    $(".answersForm").each( function(i, obj) {
+    if ($(obj).parents(".questionData").find("select").val() != "t") {
+    var options = $(this).find($("input[type='text']"));
+    $(options).each(function(i, o) { i++;
+    var $label = $("<label>").text('Вариант '+ i);
+    $(o).prev().remove();
+    $($label).insertBefore(o);
+    });
+    $(obj).attr("value", i);}
+    });
+    };
+</script>
+<script>
+    <!--On ready-->
+    $(document).ready( function() {
+    changeNumbers();
+    changeOptionsNumbers();
     });
 </script>
 
-<form class="poll_data">{% csrf_token %}
-     <table width="100%" cellspacing="0" cellpadding="4">
+<form class="pollData" method="post">{% csrf_token %}
+    <table width="100%" cellspacing="0" cellpadding="4">
     {% for field in poll_form %}
-         <tr>
-             <td align="left" width="100">{{ field.label }}</td>
-             <td>{{ field }}</td>
-         </tr>
-   {% endfor %}
-     </table>
+        <tr>
+            <td align="left" width="100">{{ field.label }}</td>
+            <td>{{ field }}</td>
+        </tr>
+    {% endfor %}
+    </table>
 </form>
 
-<div class="questions_container">
 
-    <div class="poll_save">
-
-    <h3 class="questions_header">ВОПРОСЫ</h3>
-
-
-<button type="submit" class="save" style="float: right;">Сохранить</button></div>
-    <input type="hidden" name="next" value="{{ request.path }}">
+<div class="questionsContainer">
+    <div class="pollSave">
+        <h3 class="questionsHeader">ВОПРОСЫ</h3>
+        <button type="submit" class="save">Сохранить</button>
+    </div>
+<!--    <input type="hidden" name="next" value="{{ request.path }}">-->
 
     {% for question in questions %}
-
-<div class="question_form"><div style="background-color:white;">
-        <div class="question_div"> <h3 class="question_number">
-        <span></span></h3>
-        <span class="delete">&times;</span></div>
+    <div class="questionForm">
+        <div style="background-color:white;">
+            <div class="questionDiv"> <h3 class="questionNumber"><span></span></h3>
+                <span class="delete">&times;</span>
+            </div>
         </div>
-        <div class="question_data">
-   {{ question.text }}
-    <p><label>Тип ответа</label>
-   {{ question.answer_type }}
-    </p>
-      </div></div>
+        <div class="questionData">
+            {{ question.question_form.text }}
+            <p><label>Тип ответа</label>{{ question.question_form.answer_type }}</p>
+
+            <form class="answersForm">
+            {% if not question.question_form.answer_type.value == 't' %}
+                {% for answer in question.answers %}
+                <label></label>{{ answer.answer }} {{ answer.is_right }}<span class="deleteOption"> &times;</span><br>
+                {% endfor %}
+            {% else %}
+                <label></label>{{ question.answers.0.answer }}
+            {% endif %}
+            </form>
+        </div>
+    </div>
+
     {% endfor %}
-<script>changeNumbers();</script>
-
-
 </div>
-<button class="add_form_field">Добавить вопрос &nbsp;<span>+ </span></button>
+<button class="addFormField">Добавить вопрос &nbsp;<span>+ </span></button>
 {% endblock %}

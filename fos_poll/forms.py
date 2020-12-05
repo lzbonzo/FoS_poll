@@ -1,15 +1,17 @@
 from django import forms
-from django.forms import modelformset_factory
+from django.forms import inlineformset_factory
 
-from fos_poll.models import Poll, Question
+
+from fos_poll.models import Poll, Question, Answer
 
 
 class PollForm(forms.ModelForm):
+    DATE_INPUT_FORMATS = ['%d.%m.%Y']
 
     title = forms.CharField(label='Название:', max_length=50)
-    date_of_begin = forms.DateField(label='Дата старта: ')
-    date_of_end = forms.DateField(label='Дата окончания:')
-    description = forms.CharField(widget=forms.Textarea, label='Описание:')
+    date_of_begin = forms.DateField(label='Дата старта: ', input_formats=DATE_INPUT_FORMATS)
+    date_of_end = forms.DateField(label='Дата окончания:', input_formats=DATE_INPUT_FORMATS)
+    description = forms.CharField(widget=forms.Textarea, label='Описание:', required=False)
 
     class Meta:
         model = Poll
@@ -18,6 +20,7 @@ class PollForm(forms.ModelForm):
 
 class QuestionForm(forms.ModelForm):
 
+    attrs = {'class': 'special', 'size': '40'}
     text = forms.CharField(widget=forms.Textarea, initial='Введите текст вопроса')
     answer_type = forms.Select(choices=Question.CHOICES)
 
@@ -26,4 +29,11 @@ class QuestionForm(forms.ModelForm):
         fields = ['text', 'answer_type']
 
 
-QuestionFormSet = modelformset_factory(Question, fields=('text', 'answer_type'), extra=0)
+class AnswerForm(forms.ModelForm):
+
+    class Meta:
+        model = Answer
+        fields = ['answer', 'is_right']
+
+
+AnswerFormSet = inlineformset_factory(Question, Answer, exclude=('poll',), extra=0)
