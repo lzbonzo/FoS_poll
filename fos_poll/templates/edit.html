@@ -128,7 +128,9 @@ font-weight: normal;
 <script>
 <!--Datepicker-->
     $(document).ready(function(){
+    {% if not poll_form.date_of_begin.value %}
     $("#id_date_of_begin").datepicker({ dateFormat: 'dd.mm.yy' });
+    {% endif %}
     $("#id_date_of_end").datepicker({ dateFormat: 'dd.mm.yy' });
     });
 </script>
@@ -161,7 +163,7 @@ font-weight: normal;
     <option value="{{ t.0 }}">{{ t.1 }}</option> \
     {% endfor %} \
     </select> \
-    </p><div class="answers"></div>\
+    </p><form class="answersForm" method="post"></form>\
     </div></div>'); //add input box
     changeNumbers();
     var questionData = $('.questionData').last();
@@ -181,8 +183,8 @@ font-weight: normal;
 <!--Delete option-->
     $(document).on("click", ".deleteOption", function(e) {
     e.preventDefault();
-    $(this).parents().remove();
-    changeNumbers();
+    $(this).parents('.option').remove();
+    changeOptionsNumbers();
     });
 </script>
 {% if not poll_form.date_of_begin.value %}
@@ -257,8 +259,8 @@ font-weight: normal;
     var answerType = $(obj).parents(".questionForm").find("select").val();
     $(obj).parents(".questionForm").find(".answerOption").remove();
     var answers = $(obj).parents(".questionForm").find(".answers")
-    $(answersForm).append('<br><input type="text">\
-    <input class="answer" name="answer" value=""><span class="deleteOption">  &times;</span></div><br>');
+    $(answersForm).append('<div class="option"><br><input type="text">\
+    <input class="answer" name="answer" value=""><span class="deleteOption">  &times;</span><br></div>');
     if (answerType == "o") {
     $(obj).parents(".questionForm").find(".answer").attr("type", "radio");
     }
@@ -278,18 +280,18 @@ font-weight: normal;
     if (answerType == "t") {
     $(answersForm).contents().remove();
     if (!first.val()) {
-    $(answersForm).append('<label for="right_answer">Введите правильный ответ</label>\
-    <input type="text" name="right_answer" class="right_answer">');}
+    $(answersForm).append('<div class="option"><label for="right_answer">Введите правильный ответ</label>\
+    <input type="text" name="right_answer" class="right_answer"></div>');}
     else {
-    $(answersForm).append('<label for="right_answer">Введите правильный ответ</label>\
-    <input type="text" name="right_answer" class="right_answer" value="' + first.val() + '">');}
+    $(answersForm).append('<div class="option"><label for="right_answer">Введите правильный ответ</label>\
+    <input type="text" name="right_answer" class="right_answer" value="' + first.val() + '"></div>');}
     }
 
     else {
 
         if (!$(answersForm).find("input[type='checkbox']").length &&
         !$(answersForm).find("input[type='radio']").length )  {
-        {$(answersForm).append(' <input type="checkbox"><span class="deleteOption">  &times;</span><br>');}}
+        $(first).parents("div.option").append(' <input type="checkbox"><span class="deleteOption">  &times;</span><br>');}
         if (answerType == "o") {
         $(questionData).parents(".questionForm").find("input[type='checkbox']").attr("type", "radio");}
 
@@ -374,13 +376,18 @@ font-weight: normal;
             {{ question.question_form.text }}
             <p><label>Тип ответа</label>{{ question.question_form.answer_type }}</p>
 
-            <form class="answersForm">
+            <form class="answersForm" method="post">
             {% if not question.question_form.answer_type.value == 't' %}
+
                 {% for answer in question.answers %}
-                <label></label>{{ answer.answer }} {{ answer.is_right }}<span class="deleteOption"> &times;</span><br>
-                {% endfor %}
+                 <div  class="option">
+                <label></label>{{ answer.text }} {{ answer.is_right }}
+                    <span class="deleteOption"> &times;</span><br>
+                 </div>
+                 {% endfor %}
+
             {% else %}
-                <label></label>{{ question.answers.0.answer }}
+                <div  class="option"><label></label>{{ question.answers.0.text }}</div>
             {% endif %}
             </form>
         </div>

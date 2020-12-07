@@ -13,11 +13,11 @@ class Question(models.Model):
                                             ('t', 'Текст')]
     text = models.TextField(max_length=200)
     answer_type = models.CharField(max_length=50, choices=CHOICES, default='Выбрать один')
-    poll = models.ForeignKey('Poll', on_delete=models.CASCADE, default=None)
+    poll = models.ForeignKey('Poll', on_delete=models.CASCADE, default=None, related_name='questions')
 
 
 class Answer(models.Model):
 
-    answer = models.CharField(max_length=50)
+    text = models.CharField(max_length=50)
     is_right = models.BooleanField()
-    question = models.ForeignKey('Question', on_delete=models.CASCADE, default=None)
+    question = models.ForeignKey('Question', on_delete=models.CASCADE, default=None, related_name='answers')

@@ -4,9 +4,55 @@ from django.shortcuts import render, redirect
 
 # Create your views here.
 from django.views.generic import TemplateView
+from rest_framework.generics import get_object_or_404
+from rest_framework.response import Response
 
-from fos_poll.models import Poll, Question, Answer
+from rest_framework.views import APIView
+
+from fos_poll.models import Poll, Question
 from fos_poll.forms import PollForm, QuestionForm, AnswerFormSet
+from fos_poll.serializers import PollSerializer
+
+
+class EditPollApiView(APIView):
+
+    def get(self, request, poll_id):
+        print(request.user)
+        poll = Poll.objects.get(id=poll_id)
+        poll_serializer = PollSerializer(poll)
+        return Response({"poll": poll_serializer.data})
+
+    def post(self, request):
+        if request.auth:
+            poll = request.data.get('poll')
+            poll_serializer = PollSerializer(data=poll)
+            if poll_serializer.is_valid(raise_exception=True):
+                poll_saved = poll_serializer.save()
+            return Response(f'"success": "Poll "{poll_saved.id}" created successfully"')
+        return Response(f'You have no rights to create poll')
+
+    def put(self, request, poll_id):
+        poll_data = request.data.get('poll')
+        saved_poll = get_object_or_404(Poll.objects.all(), id=poll_id)
+        poll_serializer = PollSerializer(instance=saved_poll, data=poll_data, partial=True)
+        if poll_serializer.is_valid(raise_exception=True):
+            poll_serializer.update(saved_poll, poll_data)
+        return Response(f'"success": "Poll {poll_id} update successfully"')
+
+    def delete(self, request, poll_id):
+        # Get object with this pk
+        poll = get_object_or_404(Poll.objects.all(), id=poll_id)
+        poll.delete()
+        return Response({
+              f'"message": "Poll with id {poll_id} has been deleted."'
+        }, status=204)
+
+
+class PollsListApiView(APIView):
+
+    def get(self, request):
+        polls = Poll.objects.all()
+        return Response(PollSerializer(polls, many=True).data)
 
 
 class About(TemplateView):
@@ -109,6 +155,7 @@ class EditPollView(TemplateView):
         return context
 
     def post(self, request, poll_id, **kwargs):
+        print(request.POST)
         if poll_id:
             user = request.user
             poll = Poll.objects.get(id=poll_id)
@@ -143,6 +190,8 @@ class EditPollView(TemplateView):
         context = self.get_context_data(message='Poll added',
                                         poll_id=poll_id)
         return self.render_to_response(context)
+
+
 
 
 def logout_view(request):

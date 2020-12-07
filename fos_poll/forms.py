@@ -33,7 +33,7 @@ class AnswerForm(forms.ModelForm):
 
     class Meta:
         model = Answer
-        fields = ['answer', 'is_right']
+        fields = ['text', 'is_right']
 
 
 AnswerFormSet = inlineformset_factory(Question, Answer, exclude=('poll',), extra=0)
