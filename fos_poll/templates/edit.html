@@ -217,7 +217,7 @@ font-weight: normal;
 </script>
 <script>
 <!--Save button-->
-    $(document).on("click", ".save", function(e) {
+    $(document).on("click", ".save1", function(e) {
         if ($(document).find("#id_title").val()) {
         e.preventDefault();
 
@@ -355,15 +355,17 @@ font-weight: normal;
         </tr>
     {% endfor %}
     </table>
+<button type="submit" class="save">Сохранить</button>
 </form>
 
 
 <div class="questionsContainer">
     <div class="pollSave">
         <h3 class="questionsHeader">ВОПРОСЫ</h3>
-        <button type="submit" class="save">Сохранить</button>
+
     </div>
 <!--    <input type="hidden" name="next" value="{{ request.path }}">-->
+
 
     {% for question in questions %}
     <div class="questionForm">
@@ -395,5 +397,8 @@ font-weight: normal;
 
     {% endfor %}
 </div>
+
 <button class="addFormField">Добавить вопрос &nbsp;<span>+ </span></button>
+
+
 {% endblock %}

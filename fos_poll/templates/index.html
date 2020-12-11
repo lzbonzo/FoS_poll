@@ -87,8 +87,8 @@
 <hr>
 <h1 align="center">Лучший сервис опросов в мире!</h1>
 <section>
-    {% for poll in polls %}
-    <a class="poll-link" href="poll{{ poll.id }}">
+    {% for poll in poll_list %}
+    <a class="poll-link" href="{{ poll.id }}">
         <article>
             <h2>{{ poll.title }}</h2>
             <p>{{ poll.description }}</p>

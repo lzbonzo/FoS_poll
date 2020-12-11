@@ -11,29 +11,19 @@ class AnswerSerializer(serializers.ModelSerializer):
 
 
 class QuestionSerializer(serializers.ModelSerializer):
+    answers = AnswerSerializer(many=True)
 
     class Meta:
         model = Question
         fields = ['id', 'text', 'answer_type', 'answers']
-        depth = 1
-
-    def get_fields(self):
-        fields = super().get_fields()
-        fields['answers'] = AnswerSerializer(many=True)
-        return fields
 
 
 class PollSerializer(serializers.ModelSerializer):
+    questions = QuestionSerializer(many=True)
 
     class Meta:
         model = Poll
         fields = ['id', 'title', 'date_of_begin', 'date_of_end', 'description', 'questions']
-        depth = 1
-
-    def get_fields(self):
-        fields = super().get_fields()
-        fields['questions'] = QuestionSerializer(many=True)
-        return fields
 
     def create(self, validated_data):
         questions = validated_data.pop('questions')
@@ -47,7 +37,6 @@ class PollSerializer(serializers.ModelSerializer):
         return poll
 
     def update(self, instance, validated_data):
-        print(validated_data)
         questions = validated_data.pop('questions')
         poll = Poll.objects.filter(id=validated_data['id']).update(**validated_data)
         for question_data in questions:

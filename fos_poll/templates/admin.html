@@ -158,12 +158,13 @@
     <th>Дата завершения</th>
     <th colspan="1"></th>
   </tr>
-    {% for poll in polls %}
+    {% for poll in poll_list %}
     <tr class="pollRow" id="{{ poll.id }}"> {% csrf_token %}
         <td><a class="poll-link" href="{{ poll.id }}"><b>{{ poll.title }}</b></a></td>
         <td> {{ poll.date_of_begin|date:"d-m-Y" }}</td>
         <td>{{ poll.date_of_end|date:"d-m-Y" }}</td>
         <td align="center">
+
             <button type="submit" name="{{ poll.id }}" class="delete">Удалить</button></td>
 
     </tr>

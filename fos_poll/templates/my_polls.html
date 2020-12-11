@@ -71,7 +71,7 @@
 <h1 align="center">Мои опросы</h1>
 <section>
     {% for poll in polls %}
-    <a class="poll-link" href="poll{{ poll.id }}">
+    <a class="poll-link" href="{{ poll.id }}">
         <article>
             <h2>{{ poll.title }}</h2>
             <p>{{ poll.description }}</p>

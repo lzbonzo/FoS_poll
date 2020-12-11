@@ -1,35 +1,48 @@
+import os
+
 from django.contrib.auth import authenticate, login, logout
+from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import render, redirect
 
 
 # Create your views here.
+from django.views import generic
 from django.views.generic import TemplateView
+from rest_framework import permissions
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 
 from rest_framework.views import APIView
 
 from fos_poll.models import Poll, Question
-from fos_poll.forms import PollForm, QuestionForm, AnswerFormSet
+from fos_poll.forms import PollForm, QuestionForm, AnswerFormSet, QuestionFormSet
 from fos_poll.serializers import PollSerializer
 
 
 class EditPollApiView(APIView):
+    """
+        API methods
+    """
+    permission_classes = (permissions.IsAdminUser,)
 
-    def get(self, request, poll_id):
-        print(request.user)
+    def get(self, request, poll_id=None):
+        if not poll_id:
+            polls = Poll.objects.all()
+            polls_data = PollSerializer(polls, many=True).data
+            for poll in polls_data:
+                poll['questions'] = len(poll['questions'])
+            return Response({"poll": polls_data})
+
         poll = Poll.objects.get(id=poll_id)
         poll_serializer = PollSerializer(poll)
         return Response({"poll": poll_serializer.data})
 
     def post(self, request):
-        if request.auth:
-            poll = request.data.get('poll')
-            poll_serializer = PollSerializer(data=poll)
-            if poll_serializer.is_valid(raise_exception=True):
-                poll_saved = poll_serializer.save()
-            return Response(f'"success": "Poll "{poll_saved.id}" created successfully"')
-        return Response(f'You have no rights to create poll')
+        poll = request.data.get('poll')
+        poll_serializer = PollSerializer(data=poll)
+        if poll_serializer.is_valid(raise_exception=True):
+            poll_saved = poll_serializer.save()
+        return Response(f'"success": "Poll "{poll_saved.id}" created successfully"')
 
     def put(self, request, poll_id):
         poll_data = request.data.get('poll')
@@ -40,7 +53,6 @@ class EditPollApiView(APIView):
         return Response(f'"success": "Poll {poll_id} update successfully"')
 
     def delete(self, request, poll_id):
-        # Get object with this pk
         poll = get_object_or_404(Poll.objects.all(), id=poll_id)
         poll.delete()
         return Response({
@@ -48,11 +60,8 @@ class EditPollApiView(APIView):
         }, status=204)
 
 
-class PollsListApiView(APIView):
-
-    def get(self, request):
-        polls = Poll.objects.all()
-        return Response(PollSerializer(polls, many=True).data)
+class UserPollApiView(APIView):
+    pass
 
 
 class About(TemplateView):
@@ -64,26 +73,14 @@ class About(TemplateView):
         return context
 
 
-class MainPageView(TemplateView):
+class MainPageView(generic.ListView):
     template_name = 'index.html'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        polls = Poll.objects.values('title', 'description', 'id')
-        context['polls'] = polls
-        return context
+    model = Poll
 
 
-class PollView(TemplateView):
+class PollView(generic.DetailView):
     template_name = 'poll.html'
-
-    def get_context_data(self, poll_id, **kwargs):
-        context = super().get_context_data(**kwargs)
-        poll = Poll.objects.filter(id=poll_id)[0]
-        context['id'] = poll_id
-        context['title'] = poll.title
-        context['description'] = poll.description
-        return context
+    model = Poll
 
 
 class AdminLoginView(TemplateView):
@@ -102,21 +99,14 @@ class AdminLoginView(TemplateView):
             return render(request, self.template_name, context)
 
 
-class AdminPollsView(TemplateView):
+class AdminPollsView(generic.ListView):
     template_name = 'admin.html'
+    model = Poll
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        polls = Poll.objects.values(
-            'title', 'description', 'date_of_begin', 'date_of_end', 'id').order_by('-date_of_begin')
-        context['polls'] = polls
-        return context
-
-    def post(self, request, *args, **kwargs):
-        context = self.get_context_data(message='Record deleted')
-        poll_id = request.POST.get('id')
-        Poll.objects.get(id=poll_id).delete()
-        return self.render_to_response(context)
+    def post(self, request):
+        Poll.objects.get(pk=request.POST.get('id')).delete()
+        self.object_list = self.get_queryset()
+        return HttpResponseRedirect('/')
 
 
 class MyPollsView(TemplateView):
@@ -132,25 +122,26 @@ class MyPollsView(TemplateView):
 class EditPollView(TemplateView):
     template_name = 'edit.html'
 
-    def get_context_data(self, poll_id=-1, **kwargs):
+    def get_context_data(self, poll_id=None, **kwargs):
         context = super().get_context_data(**kwargs)
-        poll = Poll.objects.filter(id=poll_id)
 
-        if poll.count():
-            poll = poll[0]
+        if poll_id:
+            try:
+                poll = Poll.objects.get(id=poll_id)
+            except Exception:
+                raise Http404('Poll does not exist')
             context['page_title'] = f'Опрос № {poll_id}'
         else:
             poll = Poll()
             context['page_title'] = 'Новый опрос'
-
-        # context['answers'] = AnswersForm(instance=Question.objects.filter(id=4)[0].answers)
         context['poll_id'] = poll.pk
         context['poll_form'] = PollForm(instance=poll)
         context['question_empty_form'] = QuestionForm
-        questions_query_set = Question.objects.filter(poll=poll)
+        questions_query_set = poll.questions.all()
         questions = []
         for q in questions_query_set:
-            questions.append({"question_form": QuestionForm(instance=q), "answers": AnswerFormSet(instance=q)})
+            questions.append({"question_form": QuestionForm(instance=q),
+                              "answers": AnswerFormSet(instance=q)})
         context['questions'] = questions
         return context
 
