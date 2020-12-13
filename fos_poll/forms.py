@@ -1,15 +1,10 @@
 from django import forms
 from django.forms import inlineformset_factory
 
-
 from fos_poll.models import Poll, Question, Answer
 
 
-class AnswerForm(forms.ModelForm):
-
-    class Meta:
-        model = Answer
-        fields = ['text', 'is_right']
+AnswerFormSet = inlineformset_factory(Question, Answer, exclude=('poll',), extra=0)
 
 
 class QuestionForm(forms.ModelForm):
@@ -20,22 +15,39 @@ class QuestionForm(forms.ModelForm):
         model = Question
         fields = ['text', 'answer_type']
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.answer_formset = AnswerFormSet(instance=self.instance,
+                                            data=self.data or None,
+                                            prefix=self.prefix)
 
-QuestionFormSet = inlineformset_factory(Poll, Question, exclude=('poll',), extra=0)
+    def is_valid(self):
+        print(self.fields)
+        print(super().is_valid())
+
+        return (super().is_valid() and
+                self.answer_formset.is_valid())
+
+    def save(self, commit=True):
+        assert commit is True
+        res = super().save(commit=commit)
+        self.answer_formset.save()
+        return res
 
 
 class PollForm(forms.ModelForm):
-    DATE_INPUT_FORMATS = ['%d.%m.%Y']
+    DATE_FORMAT = "%d.%m.%Y"
 
-    title = forms.CharField(label='Название:', max_length=50)
-    date_of_begin = forms.DateField(label='Дата старта: ', input_formats=DATE_INPUT_FORMATS)
-    date_of_end = forms.DateField(label='Дата окончания:', input_formats=DATE_INPUT_FORMATS)
-    description = forms.CharField(widget=forms.Textarea, label='Описание:', required=False)
-
+    title = forms.CharField(label='Название:')
+    date_of_begin = forms.DateField(input_formats=DATE_FORMAT,
+                                    widget=forms.widgets.DateInput(format=DATE_FORMAT), label='Дата начала:')
+    date_of_end = forms.DateField(input_formats=DATE_FORMAT,
+                                  widget=forms.widgets.DateInput(format=DATE_FORMAT), label='Дата окончания:')
+    description = forms.Textarea()
 
     class Meta:
         model = Poll
-        fields = ('title', 'date_of_begin', 'date_of_end', 'description')
+        fields = '__all__'
 
 
-AnswerFormSet = inlineformset_factory(Question, Answer, exclude=('poll',), extra=0)
+QuestionFormSet = inlineformset_factory(Poll, Question, form=QuestionForm, exclude=('poll',), extra=0)

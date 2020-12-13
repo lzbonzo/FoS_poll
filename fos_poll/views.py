@@ -1,7 +1,5 @@
-import os
-
 from django.contrib.auth import authenticate, login, logout
-from django.http import Http404, HttpResponseRedirect
+from django.http import HttpResponseRedirect
 from django.shortcuts import render, redirect
 
 
@@ -15,7 +13,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from fos_poll.models import Poll, Question
-from fos_poll.forms import PollForm, QuestionForm, AnswerFormSet, QuestionFormSet
+from fos_poll.forms import QuestionFormSet, PollForm
 from fos_poll.serializers import PollSerializer
 
 
@@ -100,6 +98,7 @@ class AdminLoginView(TemplateView):
 
 
 class AdminPollsView(generic.ListView):
+    permission_classes = (permissions.IsAdminUser,)
     template_name = 'admin.html'
     model = Poll
 
@@ -119,72 +118,22 @@ class MyPollsView(TemplateView):
         return context
 
 
-class EditPollView(TemplateView):
+class EditPollView(generic.UpdateView):
     template_name = 'edit.html'
+    model = Poll
+    form_class = PollForm
 
-    def get_context_data(self, poll_id=None, **kwargs):
+    def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-
-        if poll_id:
-            try:
-                poll = Poll.objects.get(id=poll_id)
-            except Exception:
-                raise Http404('Poll does not exist')
-            context['page_title'] = f'Опрос № {poll_id}'
-        else:
-            poll = Poll()
-            context['page_title'] = 'Новый опрос'
-        context['poll_id'] = poll.pk
-        context['poll_form'] = PollForm(instance=poll)
-        context['question_empty_form'] = QuestionForm
-        questions_query_set = poll.questions.all()
-        questions = []
-        for q in questions_query_set:
-            questions.append({"question_form": QuestionForm(instance=q),
-                              "answers": AnswerFormSet(instance=q)})
-        context['questions'] = questions
+        poll = context['poll']
+        context['questions_formset'] = QuestionFormSet(prefix='questions_formset', instance=poll)
         return context
 
-    def post(self, request, poll_id, **kwargs):
-        print(request.POST)
-        if poll_id:
-            user = request.user
-            poll = Poll.objects.get(id=poll_id)
-            if request.method == 'POST':
-                form = PollForm(request.POST, instance=poll)
-                if form.is_valid():
-                    form.save()
-
-            # TODO post form`
-            # poll = Poll.objects.filter(id=poll_id)[0]
-            # old_questions = Question.objects.filter(poll=poll)
-            # if old_questions.count():
-            #     for old_question in old_questions:
-            #         old_question.delete()
-        # else:
-        #     poll = Poll()
-        #     poll.date_of_begin = datetime.strftime(
-        #         datetime.strptime(request.POST.get('date_of_begin'), '%d-%m-%Y'), '%Y-%m-%d')
-        # poll.title = request.POST.get('title')
-        # poll.description = request.POST.get('description')
-        # poll.date_of_end = datetime.strftime(datetime.strptime(request.POST.get('date_of_end'), '%d-%m-%Y'), '%Y-%m-%d')
-        # poll.save()
-        # questions = json.loads(request.POST.get('questions'))
-        # if questions:
-        #     for every_question, question_info in questions.items():
-        #         question = Question()
-        #         question.answer_type = question_info.get('answer_type')
-        #         question.text = question_info.get('text')
-        #         question.poll = poll
-        #         question.save()
-
-        context = self.get_context_data(message='Poll added',
-                                        poll_id=poll_id)
-        return self.render_to_response(context)
-
-
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        return super().post(request, *args, **kwargs)
 
 
 def logout_view(request):
     logout(request)
-    return redirect('/')
+    return redirect('main_page')

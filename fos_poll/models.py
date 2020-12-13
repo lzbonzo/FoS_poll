@@ -2,10 +2,10 @@ from django.db import models
 
 
 class Poll(models.Model):
-    title = models.CharField(max_length=50)
-    date_of_begin = models.DateField(auto_now_add=False)
-    date_of_end = models.DateField()
-    description = models.TextField(max_length=200, blank=True)
+    title = models.CharField(max_length=50, verbose_name='Название:')
+    date_of_begin = models.DateField(auto_now_add=False, verbose_name='Дата начала:')
+    date_of_end = models.DateField(verbose_name='Дата окончания:')
+    description = models.TextField(max_length=200, blank=True, verbose_name='Описание:')
 
 
 class Question(models.Model):

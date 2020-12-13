@@ -110,25 +110,9 @@ font-weight: normal;
 }
 </style>
 <script>
-<!--Format date-->
-    function formatDate(date_to_format) {
-    var date=new Date(date_to_format);
-    var month = date.getMonth() + 1;
-    var day = date.getDate();
-    var year = date.getFullYear();
-    var formattedDate = day + "." + month + "." + year
-    return formattedDate;
-    };
-
-    $(document).ready( function() {
-    $("#id_date_of_begin").attr('value', formatDate($("#id_date_of_begin").val()));
-    $("#id_date_of_end").attr('value', formatDate($("#id_date_of_end").val()));
-    });
-</script>
-<script>
 <!--Datepicker-->
     $(document).ready(function(){
-    {% if not poll_form.date_of_begin.value %}
+    {% if not form.date_of_begin.value %}
     $("#id_date_of_begin").datepicker({ dateFormat: 'dd.mm.yy' });
     {% endif %}
     $("#id_date_of_end").datepicker({ dateFormat: 'dd.mm.yy' });
@@ -187,7 +171,7 @@ font-weight: normal;
     changeOptionsNumbers();
     });
 </script>
-{% if not poll_form.date_of_begin.value %}
+{% if not form.date_of_begin.value %}
 <!--Default dates-->
     <script>
         var dt = new Date();
@@ -215,42 +199,59 @@ font-weight: normal;
     return i;
 }
 </script>
+<!--<script>-->
+<!--&lt;!&ndash;Save button&ndash;&gt;-->
+<!--    $(document).on("click", ".save", function(e) {-->
+<!--        if ($(document).find("#id_title").val()) {-->
+<!--       -->
+
+<!--        if (notIsEmpty()) {-->
+<!--        var CSRFtoken = $('input[name=csrfmiddlewaretoken]').val();-->
+<!--        var questions = {};-->
+<!--        var title =  $(document).find("#id_title").val();-->
+<!--        var date_of_begin =  $(document).find("#id_date_of_begin").val();-->
+<!--        var date_of_end =  $(document).find("#id_date_of_end").val();-->
+<!--        var description =  $(document).find("#id_description").val();-->
+
+<!--        $("div.questionForm").each(function(index, obj) {-->
+
+<!--        var question_text = $(obj).find("textarea").val();-->
+<!--        var answer_type = $(obj).find("select").val();-->
+<!--        var question_info = {text: question_text, answer_type: answer_type };-->
+<!--        var id = $(obj).attr('id');-->
+<!--        questions[id]= question_info;-->
+<!--        } );-->
+<!--        {% if poll_id %}-->
+<!--        $.post( "/admin/{{ poll_id }}", { csrfmiddlewaretoken: CSRFtoken, poll_id: {{ poll_id }},-->
+<!--        title: title, date_of_begin: date_of_begin, date_of_end: date_of_end, description: description,-->
+<!--        questions:JSON.stringify( questions ) } );-->
+<!--        {% else %}-->
+<!--        $.post( "/admin/new_poll", { csrfmiddlewaretoken: CSRFtoken,-->
+<!--        title: title, date_of_begin: date_of_begin, date_of_end: date_of_end, description: description,-->
+<!--         questions:JSON.stringify( questions )});-->
+<!--        {% endif %}-->
+<!--        window.location.replace('/admin');-->
+<!--        } else {alert('Введите текст вопроса, пожалуйста.');}-->
+<!--        } else {alert('Введите названия опроса, пожалуйста.');-->
+<!--        }-->
+<!--});-->
+<!--</script>-->
 <script>
 <!--Save button-->
-    $(document).on("click", ".save1", function(e) {
-        if ($(document).find("#id_title").val()) {
-        e.preventDefault();
+    function submitForms() {
+        $.ajax({
+		type: "POST",
+		dataType: "json",
+		url: "/admin/{{ poll.id }}",
+		data: $("#poll").serialize() + "&" + $("#questions_form_id").serialize(),
+		success: function(data)
+		{
+			//Porcess data from server
+		}
+	});
 
-        if (notIsEmpty()) {
-        var CSRFtoken = $('input[name=csrfmiddlewaretoken]').val();
-        var questions = {};
-        var title =  $(document).find("#id_title").val();
-        var date_of_begin =  $(document).find("#id_date_of_begin").val();
-        var date_of_end =  $(document).find("#id_date_of_end").val();
-        var description =  $(document).find("#id_description").val();
-
-        $("div.questionForm").each(function(index, obj) {
-
-        var question_text = $(obj).find("textarea").val();
-        var answer_type = $(obj).find("select").val();
-        var question_info = {text: question_text, answer_type: answer_type };
-        var id = $(obj).attr('id');
-        questions[id]= question_info;
-        } );
-        {% if poll_id %}
-        $.post( "/admin/{{ poll_id }}", { csrfmiddlewaretoken: CSRFtoken, poll_id: {{ poll_id }},
-        title: title, date_of_begin: date_of_begin, date_of_end: date_of_end, description: description,
-        questions:JSON.stringify( questions ) } );
-        {% else %}
-        $.post( "/admin/new_poll", { csrfmiddlewaretoken: CSRFtoken,
-        title: title, date_of_begin: date_of_begin, date_of_end: date_of_end, description: description,
-         questions:JSON.stringify( questions )});
-        {% endif %}
-        window.location.replace('/admin');
-        } else {alert('Введите текст вопроса, пожалуйста.');}
-        } else {alert('Введите названия опроса, пожалуйста.');
-        }
-});
+<!--    window.location.replace('/admin');--> // return to admin
+    };
 </script>
 <script>
 <!--Add question button-->
@@ -346,28 +347,28 @@ font-weight: normal;
     });
 </script>
 
-<form class="pollData" method="post">{% csrf_token %}
+<form method="post" id="poll">{% csrf_token %}
+    <div class="pollData">
     <table width="100%" cellspacing="0" cellpadding="4">
-    {% for field in poll_form %}
+    {% for field in form %}
         <tr>
             <td align="left" width="100">{{ field.label }}</td>
             <td>{{ field }}</td>
         </tr>
     {% endfor %}
     </table>
-<button type="submit" class="save">Сохранить</button>
+    </div>
 </form>
 
 
+<form method="post" id="questions_form_id">{% csrf_token %}
 <div class="questionsContainer">
     <div class="pollSave">
         <h3 class="questionsHeader">ВОПРОСЫ</h3>
-
+        <button type="button" class="save" onclick="submitForms()">Сохранить</button>
     </div>
-<!--    <input type="hidden" name="next" value="{{ request.path }}">-->
 
-
-    {% for question in questions %}
+    {% for question in questions_formset %}
     <div class="questionForm">
         <div style="background-color:white;">
             <div class="questionDiv"> <h3 class="questionNumber"><span></span></h3>
@@ -375,13 +376,15 @@ font-weight: normal;
             </div>
         </div>
         <div class="questionData">
-            {{ question.question_form.text }}
-            <p><label>Тип ответа</label>{{ question.question_form.answer_type }}</p>
+            {{ question.text }}
+            <p><label>Тип ответа</label>{{ question.answer_type }}</p>
 
-            <form class="answersForm" method="post">
-            {% if not question.question_form.answer_type.value == 't' %}
+            <div class="answersForm">
+            {% if not question.answer_type.value == 't' %}
+                {{question.answers_formset}}
 
-                {% for answer in question.answers %}
+                {% for answer in question.answer_formset %}
+
                  <div  class="option">
                 <label></label>{{ answer.text }} {{ answer.is_right }}
                     <span class="deleteOption"> &times;</span><br>
@@ -389,16 +392,14 @@ font-weight: normal;
                  {% endfor %}
 
             {% else %}
-                <div  class="option"><label></label>{{ question.answers.0.text }}</div>
+                <div  class="option"><label></label>{{ question.answer_formset.0.text }}</div>
             {% endif %}
-            </form>
+            </div>
         </div>
     </div>
 
     {% endfor %}
 </div>
-
+</form>
 <button class="addFormField">Добавить вопрос &nbsp;<span>+ </span></button>
-
-
 {% endblock %}
