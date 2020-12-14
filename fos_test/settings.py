@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 """
 
 import os
+from django.conf.locale.en import formats as en_formats
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -131,3 +132,11 @@ USE_TZ = True
 STATIC_URL = '/static/'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = 'main_page'
+
+USE_L10N = False
+DATE_INPUT_FORMATS = ('%d-%m-%Y', '%d/%m/%Y', '%d.%m.%Y', '%d/%m/%y', '%d %b %Y',
+                      '%d %b, %Y', '%d.%b.%Y', '%d %b %Y', '%d %b, %Y', '%d %B, %Y',
+                      '%d %B %Y')
+DATETIME_INPUT_FORMATS = ('%d/%m/%Y %H:%M:%S', '%d/%m/%Y %H:%M', '%d/%m/%Y',
+                          '%d/%m/%y %H:%M:%S', '%d/%m/%y %H:%M', '%d/%m/%y',
+                          '%Y-%m-%d %H:%M:%S', '%Y-%m-%d %H:%M', '%Y-%m-%d')

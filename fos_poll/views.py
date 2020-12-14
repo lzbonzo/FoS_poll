@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, redirect
@@ -11,6 +13,8 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 
 from rest_framework.views import APIView
+
+import json
 
 from fos_poll.models import Poll, Question
 from fos_poll.forms import QuestionFormSet, PollForm
@@ -122,6 +126,7 @@ class EditPollView(generic.UpdateView):
     template_name = 'edit.html'
     model = Poll
     form_class = PollForm
+    success_url = '/admin/'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -130,6 +135,40 @@ class EditPollView(generic.UpdateView):
         return context
 
     def post(self, request, *args, **kwargs):
+        questions = OrderedDict()
+        # TODO save questions
+        # TODO fix answers in questions (dict)
+        # TODO fix checkbox in edit.html
+
+        for field, value in request.POST.items():
+            if 'question' in field:
+                field_splitted = field.split('_')
+                question = '_'.join(field_splitted[:2])
+                if len(field_splitted) != 2:
+                    field_name = '_'.join(field_splitted[2:])
+                    if not questions.get(question):
+                        questions[question] = {}
+                        if not questions[question].get('answers'):
+                            questions[question]['answers'] = []
+                    if 'isRight' in field_name:
+                        if not questions[question].get('is_right'):
+                            questions[question]['is_right'] = []
+                        value = field_splitted[-1]
+                        questions[question]['is_right'].append(value)
+                    else:
+                        if 'right_answer' == field_name:
+                            questions[question]['answers'].append({'text': value, 'is_right': True})
+                        else:
+                            questions[question][field_name] = value
+
+        for question, data in questions.items():
+            for field in data:
+                if 'is_right' in data and 'answerOption' in field:
+                    if field.split('_')[-1] in data['is_right']:
+                        data['answers'].append({'text': data[field], 'is_right': True})
+                    else:
+                        data['answers'].append({'text': data[field], 'is_right': False})
+
         self.object = self.get_object()
         return super().post(request, *args, **kwargs)
 

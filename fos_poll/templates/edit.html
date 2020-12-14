@@ -112,63 +112,67 @@ font-weight: normal;
 <script>
 <!--Datepicker-->
     $(document).ready(function(){
-    {% if not form.date_of_begin.value %}
-    $("#id_date_of_begin").datepicker({ dateFormat: 'dd.mm.yy' });
-    {% endif %}
-    $("#id_date_of_end").datepicker({ dateFormat: 'dd.mm.yy' });
+        {% if not form.date_of_begin.value %}
+        $("#id_date_of_begin").datepicker({ dateFormat: 'dd.mm.yy' });
+        {% endif %}
+        $("#id_date_of_end").datepicker({ dateFormat: 'dd.mm.yy' });
     });
 </script>
 <script>
     function changeNumbers() {
-    $("h3.questionNumber").each(function(index, obj) {
-    var headertext = 'Вопрос ' + (index + 1);
-    $(obj).html(headertext);
-    });
-    $(".questionForm").each(function(i,o) {$(o).attr('id', 'question' + (i + 1))});
+        $("h3.questionNumber").each(function(index, obj) {
+            var headertext = 'Вопрос ' + (index + 1);
+            $(obj).html(headertext);
+        });
+        $(".questionForm").each(function(i,o) {$(o).attr('id', 'question_' + (i + 1))
+            $(o).find("textarea").attr('id', 'question_' + (i + 1) + '_text' );
+            $(o).find("textarea").attr('name', 'question_' + (i + 1) + '_text');
+            $(o).find("select").attr('name', 'question_' + (i + 1) + '_answerType');
+        });
     }
 </script>
 
 <script>
 <!--Add question-->
     $(document).ready(function() {
-    var wrapper = $(".questionsContainer");
-    var add_button = $(".addFormField");
+        var wrapper = $(".questionsContainer");
+        var add_button = $(".addFormField");
 
-    $(add_button).click(function(e) {
-    e.preventDefault();
-    $(wrapper).append('<div class="questionForm"><div style="background-color:white;"> \
-    <div class="questionDiv"> <h3 class="questionNumber"></h3> \
-    <span class="delete">&times;</span></div></div> \
-    <div class="questionData"> \
-    <textarea id="question_text" name="question_text">Введите текст вопроса</textarea> \
-    <p><label for="answer_type">Тип ответа</label> \
-    <select name="answer_type" id="answer_type"> \
-    {% for t in question_empty_form.fields.answer_type.choices %} \
-    <option value="{{ t.0 }}">{{ t.1 }}</option> \
-    {% endfor %} \
-    </select> \
-    </p><form class="answersForm" method="post"></form>\
-    </div></div>'); //add input box
-    changeNumbers();
-    var questionData = $('.questionData').last();
-    answerOptions(questionData);
+        $(add_button).click(function(e) {
+            e.preventDefault();
+            $(wrapper).append('<div class="questionForm"><div style="background-color:white;"> \
+            <div class="questionDiv"> <h3 class="questionNumber"></h3> \
+            <span class="delete">&times;</span></div></div> \
+            <div class="questionData"> \
+            <textarea id="question_text" name="question_text">Введите текст вопроса</textarea> \
+            <p><label for="answerType">Тип ответа</label> \
+            <select name="answerType" id="answerType"> \
+            {% for t in questions_formset.empty_form.fields.answer_type.choices %} \
+            <option value="{{ t.0 }}">{{ t.1 }}</option> \
+            {% endfor %} \
+            </select> \
+            </p><div class="answersForm" method="post"></div>\
+            </div></div>'); //add input box
+            changeNumbers();
+            var questionData = $('.questionData').last();
+            answerOptions(questionData);
+        });
     });
-});
 </script>
 <script>
 <!--Delete question-->
     $(document).on("click", ".delete", function(e) {
-    e.preventDefault();
-    $(this).parents('.questionForm').remove();
-    changeNumbers();
+        e.preventDefault();
+        $(this).parents('.questionForm').remove();
+        changeNumbers();
     });
 </script>
 <script>
 <!--Delete option-->
     $(document).on("click", ".deleteOption", function(e) {
-    e.preventDefault();
-    $(this).parents('.option').remove();
-    changeOptionsNumbers();
+        e.preventDefault();
+        $(this).parents('.option').remove();
+        changeOptionsNumbers();
     });
 </script>
 {% if not form.date_of_begin.value %}
@@ -177,97 +181,44 @@ font-weight: normal;
         var dt = new Date();
         var dt_str = dt.toLocaleDateString();
         $(document).ready(function(){
-        $('#id_date_of_begin').attr("value", dt_str);
-        $('#id_date_of_end').attr("value", dt_str);
+            $('#id_date_of_begin').attr("value", dt_str);
+            $('#id_date_of_end').attr("value", dt_str);
         });
     </script>
 {% else %}
 <!--Readonly date of begin-->
     <script>
         $(document).ready(function() {
-        $("#id_date_of_begin").attr("readonly", true);
+            $("#id_date_of_begin").attr("readonly", true);
         });
     </script>
 {% endif %}
 <script>
     function notIsEmpty() {
-    var i = true;
-    $(".questionForm").each(function(index, obj) {
-    if (!$(obj).find("textarea").val())
-    {i = false; return false;}
-    });
-    return i;
-}
+        var i = true;
+        $(".questionForm").each(function(index, obj) {
+            if (!$(obj).find("textarea").val())
+                {i = false; return false;}
+        });
+        return i;
+    }
 </script>
-<!--<script>-->
-<!--&lt;!&ndash;Save button&ndash;&gt;-->
-<!--    $(document).on("click", ".save", function(e) {-->
-<!--        if ($(document).find("#id_title").val()) {-->
-<!--       -->
 
-<!--        if (notIsEmpty()) {-->
-<!--        var CSRFtoken = $('input[name=csrfmiddlewaretoken]').val();-->
-<!--        var questions = {};-->
-<!--        var title =  $(document).find("#id_title").val();-->
-<!--        var date_of_begin =  $(document).find("#id_date_of_begin").val();-->
-<!--        var date_of_end =  $(document).find("#id_date_of_end").val();-->
-<!--        var description =  $(document).find("#id_description").val();-->
-
-<!--        $("div.questionForm").each(function(index, obj) {-->
-
-<!--        var question_text = $(obj).find("textarea").val();-->
-<!--        var answer_type = $(obj).find("select").val();-->
-<!--        var question_info = {text: question_text, answer_type: answer_type };-->
-<!--        var id = $(obj).attr('id');-->
-<!--        questions[id]= question_info;-->
-<!--        } );-->
-<!--        {% if poll_id %}-->
-<!--        $.post( "/admin/{{ poll_id }}", { csrfmiddlewaretoken: CSRFtoken, poll_id: {{ poll_id }},-->
-<!--        title: title, date_of_begin: date_of_begin, date_of_end: date_of_end, description: description,-->
-<!--        questions:JSON.stringify( questions ) } );-->
-<!--        {% else %}-->
-<!--        $.post( "/admin/new_poll", { csrfmiddlewaretoken: CSRFtoken,-->
-<!--        title: title, date_of_begin: date_of_begin, date_of_end: date_of_end, description: description,-->
-<!--         questions:JSON.stringify( questions )});-->
-<!--        {% endif %}-->
-<!--        window.location.replace('/admin');-->
-<!--        } else {alert('Введите текст вопроса, пожалуйста.');}-->
-<!--        } else {alert('Введите названия опроса, пожалуйста.');-->
-<!--        }-->
-<!--});-->
-<!--</script>-->
 <script>
-<!--Save button-->
-    function submitForms() {
-        $.ajax({
-		type: "POST",
-		dataType: "json",
-		url: "/admin/{{ poll.id }}",
-		data: $("#poll").serialize() + "&" + $("#questions_form_id").serialize(),
-		success: function(data)
-		{
-			//Porcess data from server
-		}
-	});
-
-<!--    window.location.replace('/admin');--> // return to admin
-    };
-</script>
-<script>
-<!--Add question button-->
+<!--Add options-->
     function addOptionsFields(obj) {
     var answersForm = $(obj).parents(".questionForm").find('.answersForm');
     var answerType = $(obj).parents(".questionForm").find("select").val();
-    $(obj).parents(".questionForm").find(".answerOption").remove();
-    var answers = $(obj).parents(".questionForm").find(".answers")
-    $(answersForm).append('<div class="option"><br><input type="text">\
-    <input class="answer" name="answer" value=""><span class="deleteOption">  &times;</span><br></div>');
+<!--    $(obj).parents(".questionForm").find(".answerOption").remove();-->
+    var answers = $(obj).parents(".questionForm").find(".is_right")
+    $(answersForm).append('<div class="option"><br><input type="text" class="answerOption" name="answerOption">\
+    <input class="is_right" name="is_right" value=""><span class="deleteOption">  &times;</span><br></div>');
     if (answerType == "o") {
-    $(obj).parents(".questionForm").find(".answer").attr("type", "radio");
+    $(obj).parents(".questionForm").find(".is_right").attr("type", "radio");
     }
     else
     {
-    $(obj).parents(".questionForm").find(".answer").attr("type", "checkbox");
+    $(obj).parents(".questionForm").find(".is_right").attr("type", "checkbox");
     }
     changeOptionsNumbers();
    };
@@ -298,9 +249,9 @@ font-weight: normal;
 
         else {
         $(questionData).parents(".questionForm").find("input[type='radio']").attr("type", "checkbox");}
-        $(questionData).parents(".questionForm").find("input[type='radio']").attr("name", "answer");
+        $(questionData).parents(".questionForm").find("input[type='radio']").attr("name", "is_right");
     if (!$(questionData).find('.addOptionDiv').length) {
-    $(questionData).append('<div class="addOptionDiv"><br><button type="button" class="addOption"\
+    $(questionData).append('<div class="addOptionDiv"><button type="button" class="addOption"\
     onclick="addOptionsFields(this)">Добавить вариант</button></div>');}
     }
     };
@@ -308,42 +259,61 @@ font-weight: normal;
 <script>
 <!--Answer options on ready-->
     $(document).ready( function() {
-    $("select").each( function(obj) {
-    var questionData = $(this).parents(".questionData");
-    answerOptions(questionData);
-    });
+        $("select").each( function(obj) {
+            var questionData = $(this).parents(".questionData");
+            answerOptions(questionData);
+        });
     });
 </script>
 <script>
 <!--Answer options on change-->
     $(document).on("change", "select", function(e) {
-    e.preventDefault();
-    var questionData = $(this).parents(".questionData");
-    answerOptions(questionData);
-    changeOptionsNumbers();
+        e.preventDefault();
+        var questionData = $(this).parents(".questionData");
+        answerOptions(questionData);
+        changeOptionsNumbers();
+        changeRightAnswersNumbers();
     });
+</script>
+<script>
+<!--    Change right_answer numbers-->
+    function changeRightAnswersNumbers() {
+        $(document).find(".right_answer").each( function(i, obj) {
+            var questionNumber = $(obj).parents('.questionForm').attr('id');
+            $(obj).attr('name', questionNumber + '_right_answer');
+        });
+    };
 </script>
 <script>
     <!--Change options numbers-->
     function changeOptionsNumbers() {
-    var i = 0;
-    $(".answersForm").each( function(i, obj) {
-    if ($(obj).parents(".questionData").find("select").val() != "t") {
-    var options = $(this).find($("input[type='text']"));
-    $(options).each(function(i, o) { i++;
-    var $label = $("<label>").text('Вариант '+ i);
-    $(o).prev().remove();
-    $($label).insertBefore(o);
-    });
-    $(obj).attr("value", i);}
-    });
+        var i = 0;
+        $(".answersForm").each( function(i, obj) {
+            if ($(obj).parents(".questionData").find("select").val() != "t") {
+                var options = $(this).find('.option');
+                $(options).each(function(i, o) {
+                    var text = $(o).find("input[type='text']");
+                    var is_right = $(o).find(".is_right");
+                    $(text).prev().remove();
+                    i++;
+                    var $label = $("<label>").text('Вариант '+ i);
+                    var questionNumber = $(obj).parents('.questionForm').attr('id');
+                    $(text).attr('name', questionNumber + '_answerOption_' + (i));
+                    $(is_right).attr('name', questionNumber + '_isRight_' + (i));
+                    $($label).insertBefore(text);
+                });
+                $(obj).attr("value", i);
+            }
+
+        });
     };
 </script>
 <script>
     <!--On ready-->
     $(document).ready( function() {
-    changeNumbers();
-    changeOptionsNumbers();
+        changeNumbers();
+        changeOptionsNumbers();
+        changeRightAnswersNumbers();
     });
 </script>
 
@@ -358,15 +328,13 @@ font-weight: normal;
     {% endfor %}
     </table>
     </div>
-</form>
-
-
-<form method="post" id="questions_form_id">{% csrf_token %}
-<div class="questionsContainer">
     <div class="pollSave">
         <h3 class="questionsHeader">ВОПРОСЫ</h3>
-        <button type="button" class="save" onclick="submitForms()">Сохранить</button>
+        <button type="submit" class="save">Сохранить</button>
     </div>
+
+<div class="questionsContainer">
+
 
     {% for question in questions_formset %}
     <div class="questionForm">

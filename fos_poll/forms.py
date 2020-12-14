@@ -39,9 +39,9 @@ class PollForm(forms.ModelForm):
     DATE_FORMAT = "%d.%m.%Y"
 
     title = forms.CharField(label='Название:')
-    date_of_begin = forms.DateField(input_formats=DATE_FORMAT,
+    date_of_begin = forms.DateField(input_formats=("%d.%m.%Y", ),
                                     widget=forms.widgets.DateInput(format=DATE_FORMAT), label='Дата начала:')
-    date_of_end = forms.DateField(input_formats=DATE_FORMAT,
+    date_of_end = forms.DateField(input_formats=("%d.%m.%Y", ),
                                   widget=forms.widgets.DateInput(format=DATE_FORMAT), label='Дата окончания:')
     description = forms.Textarea()
 
