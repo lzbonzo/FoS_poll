@@ -127,7 +127,7 @@ font-weight: normal;
         $(".questionForm").each(function(i,o) {$(o).attr('id', 'question_' + (i + 1))
             $(o).find("textarea").attr('id', 'question_' + (i + 1) + '_text' );
             $(o).find("textarea").attr('name', 'question_' + (i + 1) + '_text');
-            $(o).find("select").attr('name', 'question_' + (i + 1) + '_answerType');
+            $(o).find("select").attr('name', 'question_' + (i + 1) + '_answer_type');
         });
     }
 </script>
@@ -145,13 +145,13 @@ font-weight: normal;
             <span class="delete">&times;</span></div></div> \
             <div class="questionData"> \
             <textarea id="question_text" name="question_text">Введите текст вопроса</textarea> \
-            <p><label for="answerType">Тип ответа</label> \
-            <select name="answerType" id="answerType"> \
+            <p><label for="answer_type">Тип ответа</label> \
+            <select name="answer_type" id="answer_type"> \
             {% for t in questions_formset.empty_form.fields.answer_type.choices %} \
             <option value="{{ t.0 }}">{{ t.1 }}</option> \
             {% endfor %} \
             </select> \
-            </p><div class="answersForm" method="post"></div>\
+            </p><div class="answersForm"></div>\
             </div></div>'); //add input box
             changeNumbers();
             var questionData = $('.questionData').last();
@@ -210,15 +210,15 @@ font-weight: normal;
     var answersForm = $(obj).parents(".questionForm").find('.answersForm');
     var answerType = $(obj).parents(".questionForm").find("select").val();
 <!--    $(obj).parents(".questionForm").find(".answerOption").remove();-->
-    var answers = $(obj).parents(".questionForm").find(".is_right")
+    var answers = $(obj).parents(".questionForm").find(".isRight")
     $(answersForm).append('<div class="option"><br><input type="text" class="answerOption" name="answerOption">\
-    <input class="is_right" name="is_right" value=""><span class="deleteOption">  &times;</span><br></div>');
+    <input class="isRight" value=""><span class="deleteOption">  &times;</span><br></div>');
     if (answerType == "o") {
-    $(obj).parents(".questionForm").find(".is_right").attr("type", "radio");
+    $(obj).parents(".questionForm").find(".isRight").attr("type", "radio");
     }
     else
     {
-    $(obj).parents(".questionForm").find(".is_right").attr("type", "checkbox");
+    $(obj).parents(".questionForm").find(".isRight").attr("type", "checkbox");
     }
     changeOptionsNumbers();
    };
@@ -249,7 +249,7 @@ font-weight: normal;
 
         else {
         $(questionData).parents(".questionForm").find("input[type='radio']").attr("type", "checkbox");}
-        $(questionData).parents(".questionForm").find("input[type='radio']").attr("name", "is_right");
+        $(questionData).parents(".questionForm").find("input[type='radio']").attr("class", "isRight");
     if (!$(questionData).find('.addOptionDiv').length) {
     $(questionData).append('<div class="addOptionDiv"><button type="button" class="addOption"\
     onclick="addOptionsFields(this)">Добавить вариант</button></div>');}
@@ -293,13 +293,16 @@ font-weight: normal;
                 var options = $(this).find('.option');
                 $(options).each(function(i, o) {
                     var text = $(o).find("input[type='text']");
-                    var is_right = $(o).find(".is_right");
+                    var isRight = $(o).find(".isRight");
                     $(text).prev().remove();
                     i++;
                     var $label = $("<label>").text('Вариант '+ i);
                     var questionNumber = $(obj).parents('.questionForm').attr('id');
                     $(text).attr('name', questionNumber + '_answerOption_' + (i));
-                    $(is_right).attr('name', questionNumber + '_isRight_' + (i));
+                    $(text).attr('required', true);
+                    $(isRight).attr('name', questionNumber + '_isRight');
+                    $(isRight).attr('value', questionNumber + '_' + (i));
+                    $(isRight).attr('id', questionNumber + '_' + (i));
                     $($label).insertBefore(text);
                 });
                 $(obj).attr("value", i);
@@ -312,6 +315,12 @@ font-weight: normal;
     <!--On ready-->
     $(document).ready( function() {
         changeNumbers();
+        $(document).find("input[type='checkbox']").each( function (i, o) {
+            $(o).attr('class', 'isRight');
+        });
+        $(document).find("input[type='radio']").each( function (i, o) {
+            $(o).attr('class', 'isRight');
+        });
         changeOptionsNumbers();
         changeRightAnswersNumbers();
     });

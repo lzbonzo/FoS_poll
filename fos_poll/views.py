@@ -1,29 +1,24 @@
 from collections import OrderedDict
 
 from django.contrib.auth import authenticate, login, logout
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, Http404
 from django.shortcuts import render, redirect
-
-
-# Create your views here.
 from django.views import generic
 from django.views.generic import TemplateView
+
 from rest_framework import permissions
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
-
 from rest_framework.views import APIView
 
-import json
-
 from fos_poll.models import Poll, Question
-from fos_poll.forms import QuestionFormSet, PollForm
+from fos_poll.forms import QuestionFormSet, PollForm, QuestionForm
 from fos_poll.serializers import PollSerializer
 
 
 class EditPollApiView(APIView):
     """
-        API methods
+        CRUD API methods
     """
     permission_classes = (permissions.IsAdminUser,)
 
@@ -128,6 +123,12 @@ class EditPollView(generic.UpdateView):
     form_class = PollForm
     success_url = '/admin/'
 
+    def get_object(self, queryset=None):
+        """ Return new Poll.object On create or object from db on update"""
+        if self.kwargs.get('pk'):
+            return super().get_object()
+        return Poll()
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         poll = context['poll']
@@ -135,12 +136,20 @@ class EditPollView(generic.UpdateView):
         return context
 
     def post(self, request, *args, **kwargs):
-        questions = OrderedDict()
-        # TODO save questions
-        # TODO fix answers in questions (dict)
-        # TODO fix checkbox in edit.html
+        questions = self.serialize_data(request.POST)
+        poll = self.get_object()
+        Question.objects.filter(poll=poll).delete()
+        for question, data in questions.items():
+            question_form = QuestionForm(instance=Question(poll=poll), data=data)
+            if question_form.is_valid():
+                question_form.save()
+        return super().post(request, *args, **kwargs)
 
-        for field, value in request.POST.items():
+    def serialize_data(self, post_data):
+        """ Prepare request.POST data to save"""
+        questions = OrderedDict()
+        is_right_list = []
+        for field, value in post_data.items():
             if 'question' in field:
                 field_splitted = field.split('_')
                 question = '_'.join(field_splitted[:2])
@@ -150,27 +159,24 @@ class EditPollView(generic.UpdateView):
                         questions[question] = {}
                         if not questions[question].get('answers'):
                             questions[question]['answers'] = []
-                    if 'isRight' in field_name:
-                        if not questions[question].get('is_right'):
-                            questions[question]['is_right'] = []
-                        value = field_splitted[-1]
-                        questions[question]['is_right'].append(value)
+                    if field_name == 'right_answer':
+                        questions[question]['answers'].append({'text': value, 'is_right': True})
+                    elif field_name == 'isRight':
+                        is_right_list.extend(post_data.getlist(field))
                     else:
-                        if 'right_answer' == field_name:
-                            questions[question]['answers'].append({'text': value, 'is_right': True})
+                        if 'answerOption' in field_name:
+                            questions[question]['answers'].append({'text': value, 'is_right': False})
                         else:
                             questions[question][field_name] = value
 
-        for question, data in questions.items():
-            for field in data:
-                if 'is_right' in data and 'answerOption' in field:
-                    if field.split('_')[-1] in data['is_right']:
-                        data['answers'].append({'text': data[field], 'is_right': True})
-                    else:
-                        data['answers'].append({'text': data[field], 'is_right': False})
-
-        self.object = self.get_object()
-        return super().post(request, *args, **kwargs)
+        # Check answers in checkboxes
+        if is_right_list:
+            for option in is_right_list:
+                splitted_option_name = option.split('_')
+                question = '_'.join(splitted_option_name[:2])
+                number_of_right_answer = int(splitted_option_name[-1]) - 1
+                questions[question]['answers'][number_of_right_answer]['is_right'] = True
+        return questions
 
 
 def logout_view(request):

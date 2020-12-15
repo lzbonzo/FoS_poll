@@ -7,8 +7,17 @@ from fos_poll.models import Poll, Question, Answer
 AnswerFormSet = inlineformset_factory(Question, Answer, exclude=('poll',), extra=0)
 
 
+class AnswerForm(forms.ModelForm):
+    text = forms.CharField(label='Ответ:', required=True)
+    is_right = forms.BooleanField(required=False)
+
+    class Meta:
+        model = Answer
+        exclude = ('question', )
+
+
 class QuestionForm(forms.ModelForm):
-    text = forms.CharField(widget=forms.Textarea, initial='Введите текст вопроса')
+    text = forms.CharField(widget=forms.Textarea(attrs={'required': 'true'}), initial='Введите текст вопроса', required=True)
     answer_type = forms.Select(choices=Question.CHOICES)
 
     class Meta:
@@ -22,16 +31,14 @@ class QuestionForm(forms.ModelForm):
                                             prefix=self.prefix)
 
     def is_valid(self):
-        print(self.fields)
-        print(super().is_valid())
-
         return (super().is_valid() and
-                self.answer_formset.is_valid())
+                all([AnswerForm(answer).is_valid() for answer in self.data['answers']]))
 
     def save(self, commit=True):
         assert commit is True
         res = super().save(commit=commit)
-        self.answer_formset.save()
+        for answer in self.data['answers']:
+            AnswerForm(instance=Answer(question=self.instance), data=answer).save()
         return res
 
 
