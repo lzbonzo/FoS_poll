@@ -17,7 +17,8 @@ class AnswerForm(forms.ModelForm):
 
 
 class QuestionForm(forms.ModelForm):
-    text = forms.CharField(widget=forms.Textarea(attrs={'required': 'true'}), initial='Введите текст вопроса', required=True)
+    text = forms.CharField(widget=forms.Textarea(attrs={'required': 'true'}), initial='Введите текст вопроса',
+                           required=True)
     answer_type = forms.Select(choices=Question.CHOICES)
 
     class Meta:

@@ -23,7 +23,16 @@
 <body>
     <hr>
         <div style="float:left">
-             {% block left_link %} <a href="/my_polls/" class="header">Мои опросы</a> {% endblock %}
+             {% block left_link %}
+             {% if user.is_authenticated %}
+
+                 <a href="/" class="header">Главная</a>
+                 <a href="/admin/" class="header">Админка</a>
+
+             {% else %}
+                  <a href="my_polls" class="header">Мои опросы</a>
+             {% endif %}
+            {% endblock %}
         </div>
         <div align="right">
              {% if user.is_authenticated %}

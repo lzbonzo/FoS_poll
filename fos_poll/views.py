@@ -1,6 +1,7 @@
 from collections import OrderedDict
 
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.views import LoginView, LogoutView
 from django.http import HttpResponseRedirect, Http404
 from django.shortcuts import render, redirect
 from django.views import generic
@@ -75,12 +76,19 @@ class MainPageView(generic.ListView):
     model = Poll
 
 
-class PollView(generic.DetailView):
+class UserPollView(generic.DetailView):
     template_name = 'poll.html'
     model = Poll
+    form_class = PollForm
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        poll = context['poll']
+        context['questions_formset'] = QuestionFormSet(prefix='questions_formset', instance=poll)
+        return context
 
 
-class AdminLoginView(TemplateView):
+class AdminLoginView(LoginView):
     template_name = 'login.html'
 
     def post(self, request, **kwargs):
@@ -89,11 +97,15 @@ class AdminLoginView(TemplateView):
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-            return redirect('/')
+            return redirect('admin')
         else:
             context = super().get_context_data(**kwargs)
             context['message'] = '*логин или пароль введены неверно'
             return render(request, self.template_name, context)
+
+
+class UserLogoutView(LogoutView):
+    pass
 
 
 class AdminPollsView(generic.ListView):
@@ -136,14 +148,16 @@ class EditPollView(generic.UpdateView):
         return context
 
     def post(self, request, *args, **kwargs):
+        super_post = super().post(request, *args, **kwargs)
+        poll = self.object
+
         questions = self.serialize_data(request.POST)
-        poll = self.get_object()
         Question.objects.filter(poll=poll).delete()
         for question, data in questions.items():
             question_form = QuestionForm(instance=Question(poll=poll), data=data)
             if question_form.is_valid():
                 question_form.save()
-        return super().post(request, *args, **kwargs)
+        return super_post
 
     def serialize_data(self, post_data):
         """ Prepare request.POST data to save"""
@@ -177,8 +191,3 @@ class EditPollView(generic.UpdateView):
                 number_of_right_answer = int(splitted_option_name[-1]) - 1
                 questions[question]['answers'][number_of_right_answer]['is_right'] = True
         return questions
-
-
-def logout_view(request):
-    logout(request)
-    return redirect('main_page')

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 
-{% block title %}{{ page_title }}{% endblock %}
+{% block title %}Опрос № {{ poll.id }}{% endblock %}
 
 {% block left_link %} <a href="/admin/" class="header">Опросы</a> {% endblock %}
 {% block content %}
@@ -129,6 +129,7 @@ font-weight: normal;
             $(o).find("textarea").attr('name', 'question_' + (i + 1) + '_text');
             $(o).find("select").attr('name', 'question_' + (i + 1) + '_answer_type');
         });
+        changeRightAnswersNumbers();
     }
 </script>
 
@@ -156,6 +157,7 @@ font-weight: normal;
             changeNumbers();
             var questionData = $('.questionData').last();
             answerOptions(questionData);
+            changeRightAnswersNumbers();
         });
     });
 </script>
@@ -233,23 +235,24 @@ font-weight: normal;
     $(answersForm).contents().remove();
     if (!first.val()) {
     $(answersForm).append('<div class="option"><label for="right_answer">Введите правильный ответ</label>\
-    <input type="text" name="right_answer" class="right_answer"></div>');}
+    <input type="text" name="right_answer" class="right_answer" required></div>');}
     else {
     $(answersForm).append('<div class="option"><label for="right_answer">Введите правильный ответ</label>\
-    <input type="text" name="right_answer" class="right_answer" value="' + first.val() + '"></div>');}
+    <input type="text" name="right_answer" class="right_answer" value="' + first.val() + '"required></div>');}
     }
 
     else {
 
         if (!$(answersForm).find("input[type='checkbox']").length &&
         !$(answersForm).find("input[type='radio']").length )  {
-        $(first).parents("div.option").append(' <input type="checkbox"><span class="deleteOption">  &times;</span><br>');}
+        $(first).parents("div.option").append(' <input type="checkbox" class="isRight">\
+        <span class="deleteOption">  &times;</span><br>');}
         if (answerType == "o") {
-        $(questionData).parents(".questionForm").find("input[type='checkbox']").attr("type", "radio");}
-
+            $(questionData).parents(".questionForm").find("input[type='checkbox']").attr("type", "radio");
+        }
         else {
-        $(questionData).parents(".questionForm").find("input[type='radio']").attr("type", "checkbox");}
-        $(questionData).parents(".questionForm").find("input[type='radio']").attr("class", "isRight");
+            $(questionData).parents(".questionForm").find("input[type='radio']").attr("type", "checkbox");
+        }
     if (!$(questionData).find('.addOptionDiv').length) {
     $(questionData).append('<div class="addOptionDiv"><button type="button" class="addOption"\
     onclick="addOptionsFields(this)">Добавить вариант</button></div>');}
@@ -343,8 +346,6 @@ font-weight: normal;
     </div>
 
 <div class="questionsContainer">
-
-
     {% for question in questions_formset %}
     <div class="questionForm">
         <div style="background-color:white;">
@@ -354,7 +355,7 @@ font-weight: normal;
         </div>
         <div class="questionData">
             {{ question.text }}
-            <p><label>Тип ответа</label>{{ question.answer_type }}</p>
+            <p><label>{{ question.answer_type.label}}</label>{{ question.answer_type }}</p>
 
             <div class="answersForm">
             {% if not question.answer_type.value == 't' %}

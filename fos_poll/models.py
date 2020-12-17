@@ -9,9 +9,16 @@ class Poll(models.Model):
 
 
 class Question(models.Model):
-    CHOICES = [('o', 'Выбрать один'),  ('f', 'Выбрать несколько'), ('t', 'Текст')]
+    CHOOSE_ONE = 'o'
+    CHOOSE_FEW = 'f'
+    TEXT = 't'
+    CHOICES = [
+        (TEXT, 'Текст'),
+        (CHOOSE_ONE, 'Выбрать один'),
+        (CHOOSE_FEW, 'Выбрать несколько'),
+    ]
     text = models.TextField('Текст вопроса:', max_length=200)
-    answer_type = models.CharField('Тип ответа:', max_length=50, choices=CHOICES, default='Выбрать один')
+    answer_type = models.CharField('Тип ответа:', max_length=50, choices=CHOICES, default=TEXT)
     poll = models.ForeignKey('Poll', on_delete=models.CASCADE, default=None, related_name='questions')
 
 

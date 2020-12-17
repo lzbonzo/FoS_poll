@@ -1,10 +1,333 @@
 {% extends "base.html" %}
 
-{% block title %}Опрос № {{ id }}{% endblock %}
+
+{% block title %}Опрос № {{ poll.id }}{% endblock %}
 
 {% block content %}
+{% load static %}
+<link rel="shortcut icon" href="{% static 'images/favicon.ico' %}" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="manifest" href="/site.webmanifest">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+<style>
+html,body { height:100%; }
+.questionDiv {
+  display: flex;
+  justify-content: space-between;
+}
+.delete {
+    margin-left: 100px;
+    color: black;
+    font-weight: bold;
+    float: right;
+    font-size: 26px;
+    line-height: 20px;
+    cursor: pointer;
+    transition: 0.3s;
+    display: inline;
+    padding-right: 0.3em;
+    margin-top: 5px;
+}
+.deleteOption {
+    color: black;
+    font-weight: bold;
+    font-size: 15px;
+    line-height: 20px;
+    cursor: pointer;
+    transition: 0.3s;
+    display: inline;
+    padding-right: 0.3em;
+    margin-top: 5px;
+}
+textarea {
+                border-radius: 5px;
+                margin: 0px 0px 2px;
+                width: 610px;
+                height: 150px;
+                }
+input {
+border-radius: 5px 5px 5px 5px;
+}
+.check {
+    vertical-align:center;
+    border: 1px solid black;
+    line-height: 2.5;
+    font-size: 1rem;
+    text-align: center;
+    border-radius: 5px;
+    background-color: white;
+    height: 1%;
+    margin: 0;
+    position: relative;
+    left: 50%;
+    -ms-transform: translate(-50%, -50%);
+    transform: translate(-50%, 0%);
+}
+.start {
+    border: 1px solid black;
+    line-height: 2.5;
+    font-size: 1rem;
+    text-align: center;
+    border-radius: 5px;
+    background-color: white;
+    height: 1%;
+    width: 20%;
+    margin: 0;
+    position: relative;
+    margin-top: 7%;
+    left: 50%;
+    -ms-transform: translate(-50%, -50%);
+    transform: translate(-50%, 0%);
+}
+.save:hover, .start:hover {
+    cursor: pointer;
+}
+
+.save:active, .start:active{
+   color: black;
+   background-color: rgb(179, 255, 179);
+}
+.questionsHeader {
+    background: #4080bf;
+    margin-bottom: 0px;
+    margin-top: 0px;
+    padding-top: 20px;
+    height: 40px;
+    padding-left: 10px;
+    color: white;
+    font-weight: normal;
+    text-shadow: black 0 0 5px;
+}
+.questionNumber {
+    padding-left: 10px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    font-weight: normal;
+}
+.questionData {
+    overflow: hidden;
+    padding: 10px;
+    font-size: 13px;
+    border-bottom: 1px solid #eee;
+    background-color: rgba(0, 120, 201, 0.2);
+}
+.pollSave {
+    display: flex;
+    justify-content: space-between;
+    background: #4080bf;
+    padding-top: 5px;
+    padding-right: 5px;
+}
+.pollData {
+    background-color: rgba(0, 120, 201, 0.2);
+    margin-bottom: 0px;
+}
+</style>
+<script>
+    function changeNumbers() {
+        $("h3.questionNumber").each(function(index, obj) {
+            var headertext = 'Вопрос ' + (index + 1);
+            $(obj).html(headertext);
+        });
+        $(".questionForm").each(function(i,o) {$(o).attr('id', 'question_' + (i + 1))
+            $(o).find("textarea").attr('id', 'question_' + (i + 1) + '_text' );
+            $(o).find("textarea").attr('name', 'question_' + (i + 1) + '_text');
+            $(o).find("select").attr('name', 'question_' + (i + 1) + '_answer_type');
+        });
+    }
+</script>
+<script>
+    function answerOptions(questionData) {
+    $(questionData).find('.addOptionDiv').remove();
+    var answersForm = $(questionData).find('.answersForm');
+    var answerType = (questionData).find("select").val();
+    var first = $(questionData).parents(".questionForm").find("input[type='text']").first();
+    if (answerType == "t") {
+    $(answersForm).contents().remove();
+    if (!first.val()) {
+    $(answersForm).append('<div class="option"><label for="right_answer">Введите правильный ответ</label>\
+    <input type="text" name="right_answer" class="right_answer"></div>');}
+    else {
+    $(answersForm).append('<div class="option"><label for="right_answer">Введите правильный ответ</label>\
+    <input type="text" name="right_answer" class="right_answer" value="' + first.val() + '"></div>');}
+    }
+
+    else {
+
+        if (!$(answersForm).find("input[type='checkbox']").length &&
+        !$(answersForm).find("input[type='radio']").length )  {
+        $(first).parents("div.option").append(' <input type="checkbox"><span class="deleteOption">  &times;</span><br>');}
+        if (answerType == "o") {
+        $(questionData).parents(".questionForm").find("input[type='checkbox']").attr("type", "radio");}
+
+        else {
+        $(questionData).parents(".questionForm").find("input[type='radio']").attr("type", "checkbox");}
+        $(questionData).parents(".questionForm").find("input[type='radio']").attr("class", "isRight");
+
+    }
+    };
+</script>
+<script>
+<!--Answer options on ready-->
+    $(document).ready( function() {
+        $("select").each( function(obj) {
+            var questionData = $(this).parents(".questionData");
+            answerOptions(questionData);
+        });
+    });
+</script>
+<script>
+<!--    Change right_answer numbers-->
+    function changeRightAnswersNumbers() {
+        $(document).find(".right_answer").each( function(i, obj) {
+            var questionNumber = $(obj).parents('.questionForm').attr('id');
+            $(obj).attr('name', questionNumber + '_right_answer');
+        });
+    };
+</script>
+<script>
+    <!--Change options numbers-->
+    function changeOptionsNumbers() {
+        var i = 0;
+        $(".answersForm").each( function(i, obj) {
+            if ($(obj).parents(".questionData").find("select").val() != "t") {
+                var options = $(this).find('.option');
+                $(options).each(function(i, o) {
+                    var text = $(o).find("input[type='text']");
+                    var isRight = $(o).find(".isRight");
+                    $(text).prev().remove();
+                    i++;
+                    var $label = $("<label>").text('Вариант '+ i);
+                    var questionNumber = $(obj).parents('.questionForm').attr('id');
+                    $(text).attr('name', questionNumber + '_answerOption_' + (i));
+                    $(text).attr('required', true);
+                    $(isRight).attr('name', questionNumber + '_isRight');
+                    $(isRight).attr('value', questionNumber + '_' + (i));
+                    $(isRight).attr('id', questionNumber + '_' + (i));
+                    $($label).insertBefore(text);
+                });
+                $(obj).attr("value", i);
+            }
+
+        });
+    };
+</script>
+<script>
+    <!--On ready-->
+    $(document).ready( function() {
+        changeNumbers();
+        $(document).find("input[type='checkbox']").each( function (i, o) {
+            $(o).attr('class', 'isRight');
+        });
+        $(document).find("input[type='radio']").each( function (i, o) {
+            $(o).attr('class', 'isRight');
+        });
+        changeOptionsNumbers();
+        changeRightAnswersNumbers();
+    });
+</script>
+<script>
+    function showNext(button) {
+        var currentQuestionForm = $(button).parents('.questionForm');
+        if (typeof currentQuestionForm.val() === 'undefined') {
+            var currentQuestionForm = $(document).find('.questionForm:hidden').first();
+            $(currentQuestionForm).attr('hidden', false);
+        }
+        else {
+             var last = $(currentQuestionForm).next().next().val();
+             if (typeof last === 'undefined') {
+                    $(currentQuestionForm).next().find('.start').attr('hidden', true);
+                    $(document).find('.check').attr('hidden', false);
+
+             }
+             $(currentQuestionForm).attr('hidden', true);
+             $(currentQuestionForm).next().attr('hidden', false);
+             $(currentQuestionForm).next().find('.back').attr('hidden', false);
+        }
+
+    }
+    function showPrevious(button) {
+        $(document).find('.check').attr('hidden', true);
+        var currentQuestionForm = $(button).parents('.questionForm');
+        if (typeof currentQuestionForm.val() === 'undefined') {
+            var currentQuestionForm = $(document).find('.questionForm:hidden').first();
+            $(currentQuestionForm).attr('hidden', false);
+        }
+        else {
+             $(currentQuestionForm).attr('hidden', true);
+             $(currentQuestionForm).prev().attr('hidden', false);
+        }
+
+    }
+
+</script>
+<div style="background:#4080bf; height: 100%">
+<form method="post" id="poll">{% csrf_token %}
+    <div class="pollIntro">
+    <h1 class="questionsHeader" style="font-size: 50px; margin-top:0; text-align: center; padding-top: 5%;">{{ poll.title }}</h1>
+    <button type="button" class="start" onclick="showNext(); $(document).find('.pollIntro').attr('hidden', 'true');">Начать</button>
+    <h3 class="questionsHeader" style="font-size: 30px; margin-top:0; text-align: center; padding-top: 5%;">{{ poll.description }}</h3>
+    </div>
+<!--    <div class="pollSave">-->
+<!--        <h3 class="questionsHeader">ВОПРОСЫ</h3>-->
+
+<!--    </div>-->
+<!-- <button type="submit" class="check">Начать</button>-->
+<div class="questionsContainer">
 
 
-<h1>{{ poll.title }}</h1>
-{{ poll.description }}
+    {% for question in questions_formset %}
+    <div class="questionForm" hidden>
+        <div style="background-color:white;">
+            <div class="questionDiv"> <h3 class="questionNumber"><span></span></h3>
+
+            </div>
+        </div>
+        <div class="questionData" >
+            <p style="font-size: 20px; font-weight: bold;"> {{ question.text.value }}</p>
+
+            {% if question.answer_type.value == 't'%}
+                <span>Введите правильный ответ</span>
+            {% elif question.answer_type.value == 'o'%}
+                <span>Выберите один правильный вариант</span>
+            {% elif question.answer_type.value == 'f'%}
+                <span>Выберите один или несколько вариантов</span>
+            {% endif %}
+
+
+            <div class="answersForm">
+            {% if not question.answer_type.value == 't' %}
+                {{question.answers_formset}}
+
+                {% for answer in question.answer_formset %}
+
+                 <div class="option">
+                     {{ answer.is_right }}<span style="padding-left: 10px;">{{ answer.text.value }}</span>
+                   <br>
+                 </div>
+                 {% endfor %}
+
+            {% else %}
+                <div  class="option"><label></label>{{ question.answer_formset.0.text }}</div>
+            {% endif %}
+            </div>
+            <button type="button" onclick="showPrevious(this);" class="back" hidden>НАЗАД</button>
+            <button type="button" class="start" onclick="showNext(this);">Следующий вопрос</button>
+
+
+        </div>
+
+    </div>
+
+    {% endfor %}
+</div>
+    <button type="submit" class="check" hidden>
+        <span style="color: green; font-size:20px; padding-top: 0px; ">&#10004;</span>Узнать результаты</button>
+</form>
+</div>
 {% endblock %}
