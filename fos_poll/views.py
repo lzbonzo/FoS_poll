@@ -14,6 +14,7 @@ from rest_framework.views import APIView
 
 from fos_poll.models import Poll, Question
 from fos_poll.forms import QuestionFormSet, PollForm, QuestionForm
+from fos_poll.permissions import IsAdminOrReadOnly
 from fos_poll.serializers import PollSerializer
 
 
@@ -21,7 +22,7 @@ class EditPollApiView(APIView):
     """
         CRUD API methods
     """
-    permission_classes = (permissions.IsAdminUser,)
+    permission_classes = (IsAdminOrReadOnly, )
 
     def get(self, request, poll_id=None):
         if not poll_id:

@@ -29,7 +29,6 @@ class PollSerializer(serializers.ModelSerializer):
         questions = validated_data.pop('questions')
         poll = Poll.objects.create(**validated_data)
         for question_data in questions:
-            print(question_data)
             answers = question_data.pop('answers')
             question = Question.objects.create(poll=poll, **question_data)
             for answer_data in answers:
@@ -40,7 +39,6 @@ class PollSerializer(serializers.ModelSerializer):
         questions = validated_data.pop('questions')
         poll = Poll.objects.filter(id=validated_data['id']).update(**validated_data)
         for question_data in questions:
-            print(question_data)
             answers = question_data.pop('answers')
             Question.objects.filter(id=question_data['id']).update(**question_data)
             for answer_data in answers:

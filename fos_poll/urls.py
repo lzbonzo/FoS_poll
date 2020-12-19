@@ -16,6 +16,9 @@ urlpatterns = [
     url(r'^logout/$', views.UserLogoutView.as_view(), name='logout'),
 
     path("api/v0/new_poll/", views.EditPollApiView.as_view(), name='api_new_poll'),
+    path("api/v0/poll/<int:poll_id>/", views.EditPollApiView.as_view(), name='api_get_poll_data'),
     path("api/v0/edit/<int:poll_id>/", views.EditPollApiView.as_view(), name='api_edit_poll'),
     path("api/v0/polls/", views.EditPollApiView().as_view(), name='api_polls_list'),
+    path("api/v0/logout/", views.UserLogoutView.as_view(), name='api_logout'),
+    path("api/v0/login/", views.AdminLoginView.as_view(), name='api_login'),
 ]
