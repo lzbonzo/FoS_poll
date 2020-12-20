@@ -16,7 +16,6 @@ class IsAdminOrReadOnly(permissions.IsAdminUser):
         is_admin = super().has_permission(request, view)
         if is_admin:
             return is_admin
-
         else:
             if request.method != 'GET':
                 raise NeedLogin

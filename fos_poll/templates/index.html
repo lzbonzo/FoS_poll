@@ -1,3 +1,4 @@
+{% include 'base.html' %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -75,11 +76,12 @@
 
 /* Modal Content/Box */
 .modal-content {
+  border-radius: 20px;
   background-color: #fefefe;
   margin: 15% auto; /* 15% from the top and centered */
   padding: 20px;
   border: 1px solid #888;
-  width: 80%; /* Could be more or less, depending on screen size */
+  width: 20%; /* Could be more or less, depending on screen size */
 }
 
 /* The Close Button */
@@ -97,39 +99,10 @@
   cursor: pointer;
 }
     </style>
-<script>
-    login = function() {
-	document.getElementById("hide").style.display = "block";
-  document.getElementById("window").style.display = "block";
-}
-$('#myModal').on('shown.bs.modal', function () {
-  $('#myInput').focus()
-})
-</script>
+
 </head>
 <body>
-<hr>
-<div style="float:left">
-    {% block left_link %}
-    {% if user.is_authenticated %}
-    {% if request.user.is_superuser %}
-        <a href="{% url 'admin'%}?next={{request.path}}" class="header">Админка</a>
-     {% else %}
-
-        <a href="/my_polls/" class="header">Мои опросы</a>
-
-    {% endif %}{% endif %}
-    {% endblock %}
-</div>
-<div align="right">
-    {% if user.is_authenticated %}
-     <a href="{% url 'logout'%}?next={{request.path}}" class="header">Выход</a>
-    {% else %}
-<!--    <a href="{% url 'login'%}?next={{request.path}}" class="header" id="login" onclick="login()">Войти</a>-->
-    <a id="myBtn" class="header">Войти</a>
-    {% endif %}
-</div>
-<hr>
+{% block header %}{% endblock %}
 <h1 align="center">Лучший сервис опросов в мире!</h1>
 <section>
     {% for poll in poll_list %}
@@ -141,50 +114,50 @@ $('#myModal').on('shown.bs.modal', function () {
     </a>
     {% endfor %}
 </section>
-
-
 <!-- The Modal -->
 <div id="myModal" class="modal">
-<!--    TODO modal post form-->
-
   <!-- Modal content -->
   <div class="modal-content">
     <span class="close">&times;</span>
-    <form method="post">{% csrf_token %}
+    <form method="post" >{% csrf_token %}
     <div class="container">
-        <label>Логин : </label>
-        <input type="text" placeholder="Введите логин" name="username" required><br>
-        <label>Пароль : </label>
-        <input type="password" placeholder="Введите пароль" name="password" required><br>
-        <button type="submit">Войти</button>
+        <table>
+            <tr>
+                <td><label>Логин : </label></td>
+                <td>{{ form.username}}</td>
+            </tr>
 
+            <tr>
+            <td><label>Пароль : </label></td>
+            <td>{{ form.password}}</td>
+            </tr>
+        </table>
+        <p>
+            <button type="submit" style="position: relative; left: 50%; transform: translate(-50%, 0%);">Войти</button>
+        </p>
+        {% if message %}
+        <hr>
+        <script>
+            var modal = document.getElementById("myModal");
+            modal.style.display = "block";
+        </script>
+        {% endif %}
+        <p style="color: red">{{ message }}</p>
     </div>
     </form>
   </div>
-
 </div>
 <script>
-
-    // Get the modal
+<!--Show modal login form-->
 var modal = document.getElementById("myModal");
-
-// Get the button that opens the modal
 var btn = document.getElementById("myBtn");
-
-// Get the <span> element that closes the modal
 var span = document.getElementsByClassName("close")[0];
-
-// When the user clicks on the button, open the modal
 btn.onclick = function() {
   modal.style.display = "block";
 }
-
-// When the user clicks on <span> (x), close the modal
 span.onclick = function() {
   modal.style.display = "none";
 }
-
-// When the user clicks anywhere outside of the modal, close it
 window.onclick = function(event) {
   if (event.target == modal) {
     modal.style.display = "none";

@@ -1,14 +1,18 @@
 from collections import OrderedDict
 
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.views import LoginView, LogoutView
-from django.http import HttpResponseRedirect, Http404
+from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.mixins import UserPassesTestMixin
+from django.contrib.auth.views import LoginView
+from django.http import HttpResponseRedirect
 from django.shortcuts import render, redirect
 from django.views import generic
 from django.views.generic import TemplateView
+from django.views.generic.edit import FormMixin, FormView
+from rest_framework import status
 
-from rest_framework import permissions
 from rest_framework.generics import get_object_or_404
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -59,38 +63,40 @@ class EditPollApiView(APIView):
         }, status=204)
 
 
-class UserPollApiView(APIView):
-    pass
+class ApiLoginView(APIView):
+    permission_classes = (AllowAny,)
+
+    def post(self, request, **kwargs):
+        username = request.data['username']
+        password = request.data['password']
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            if user.is_superuser:
+                return Response({"success": "You are successfully logged in as admin."})
+            return Response({"success": "You are successfully logged in."})
+        else:
+            return Response({"error" :"You have entered an invalid username or password"})
 
 
-class About(TemplateView):
-    template_name = 'about.html'
+class ApiLogoutView(APIView):
+    # TODO API auth
+    permission_classes = (AllowAny,)
+
+    def post(self, request, format=None):
+        logout(request)
+        # request.user.auth_token.delete()
+        return Response(status=status.HTTP_200_OK)
+
+
+class PollListView(FormView, generic.ListView):
+    model = Poll
+    form_class = AuthenticationForm
 
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['title'] = 'about'
+        self.object_list = self.get_queryset()
+        context = super().get_context_data()
         return context
-
-
-class MainPageView(generic.ListView):
-    template_name = 'index.html'
-    model = Poll
-
-
-class UserPollView(generic.DetailView):
-    template_name = 'poll.html'
-    model = Poll
-    form_class = PollForm
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        poll = context['poll']
-        context['questions_formset'] = QuestionFormSet(prefix='questions_formset', instance=poll)
-        return context
-
-
-class AdminLoginView(LoginView):
-    template_name = 'login.html'
 
     def post(self, request, **kwargs):
         username = request.POST['username']
@@ -98,43 +104,36 @@ class AdminLoginView(LoginView):
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-            return redirect('admin')
+            if user.is_superuser:
+                return redirect('admin')
+            return redirect('/')
         else:
-            context = super().get_context_data(**kwargs)
+            context = self.get_context_data(**kwargs)
             context['message'] = '*логин или пароль введены неверно'
             return render(request, self.template_name, context)
 
 
-class UserLogoutView(LogoutView):
-    pass
-
-
-class AdminPollsView(generic.ListView):
-    permission_classes = (permissions.IsAdminUser,)
+class AdminPollListView(UserPassesTestMixin, PollListView):
+    permission_classes = (IsAdminOrReadOnly,)
     template_name = 'admin.html'
-    model = Poll
 
-    def post(self, request):
+    def test_func(self):
+        return self.request.user.is_superuser
+
+    def post(self, request, **kwargs):
         Poll.objects.get(pk=request.POST.get('id')).delete()
         self.object_list = self.get_queryset()
         return HttpResponseRedirect('/')
 
 
-class MyPollsView(TemplateView):
-    template_name = 'my_polls.html'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        polls = Poll.objects.values('title', 'description', 'id')
-        context['polls'] = polls
-        return context
-
-
-class EditPollView(generic.UpdateView):
+class EditPollView(UserPassesTestMixin, generic.UpdateView):
     template_name = 'edit.html'
     model = Poll
     form_class = PollForm
     success_url = '/admin/'
+
+    def test_func(self):
+        return self.request.user.is_superuser
 
     def get_object(self, queryset=None):
         """ Return new Poll.object On create or object from db on update"""
@@ -192,3 +191,35 @@ class EditPollView(generic.UpdateView):
                 number_of_right_answer = int(splitted_option_name[-1]) - 1
                 questions[question]['answers'][number_of_right_answer]['is_right'] = True
         return questions
+
+
+class MyPollsView(TemplateView):
+    # TODO turn to ListView
+    template_name = 'my_polls.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        polls = Poll.objects.values('title', 'description', 'id')
+        context['polls'] = polls
+        return context
+
+
+class UserPollView(generic.DetailView):
+    template_name = 'poll.html'
+    model = Poll
+    form_class = PollForm
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        poll = context['poll']
+        context['questions_formset'] = QuestionFormSet(prefix='questions_formset', instance=poll)
+        return context
+
+
+class About(TemplateView):
+    template_name = 'about.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'about'
+        return context
