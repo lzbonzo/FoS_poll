@@ -193,15 +193,10 @@ class EditPollView(UserPassesTestMixin, generic.UpdateView):
         return questions
 
 
-class MyPollsView(TemplateView):
-    # TODO turn to ListView
+class MyPollsView(generic.ListView):
+    # TODO get polls for user
     template_name = 'my_polls.html'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        polls = Poll.objects.values('title', 'description', 'id')
-        context['polls'] = polls
-        return context
+    queryset = Poll.objects.all()
 
 
 class UserPollView(generic.DetailView):

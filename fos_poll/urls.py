@@ -7,9 +7,9 @@ from fos_poll import views
 urlpatterns = [
     path("about/", views.About.as_view(), name='about'),
     path("", views.PollListView.as_view(template_name='index.html'), name='main_page'),
-    path("<int:pk>", views.UserPollView.as_view(), name='poll'),
+    path("poll/<int:pk>", views.UserPollView.as_view(), name='poll'),
     path("admin/", views.AdminPollListView.as_view(), name='admin'),
-    path("admin/<int:pk>", views.EditPollView.as_view(), name='edit'),
+    path("admin/edit/<int:pk>/", views.EditPollView.as_view(), name='edit'),
     path("admin/new_poll", views.EditPollView.as_view(), name='new_poll'),
     path("my_polls/", views.MyPollsView.as_view(), name='my_polls'),
     url(r'^logout/$', LogoutView.as_view(), name='logout'),

@@ -113,9 +113,6 @@
 
            text-decoration: underline;
             }
-
-
-
     </style>
     <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
     <script>
@@ -133,41 +130,34 @@
 <body>
     <hr>
         <div style="float:left">
-            <a href="/" class="header">Главная</a>
+            <a href="{% url 'main_page'%}" class="header">Главная</a>
         </div>
         <div align="right">
-         <a href="{% url 'logout'%}" class="header">Выход</a>
+            <a href="{% url 'logout'%}" class="header">Выход</a>
         </div>
     <hr>
-
     <h1 align="center">Приветствую тебя, админ лучшего сервиса опросов в мире!!!</h1>
         <div class="add">
-
-        <a href="{% url 'new_poll'  %}" class="fa fa-plus" style="font-size: 15px; color: green; padding: 5px;">
-            <span style="color: black;">ДОБАВИТЬ ОПРОС</span>
-        </a>
-
-
-            </div>
-
+            <a href="{% url 'new_poll'  %}" class="fa fa-plus" style="font-size: 15px; color: green; padding: 5px;">
+                <span style="color: black;">ДОБАВИТЬ ОПРОС</span>
+            </a>
+        </div>
     <table class="table_col">
-
-  <tr>
-    <th>Опрос</th>
-    <th>Дата начала</th>
-    <th>Дата завершения</th>
-    <th colspan="1"></th>
-  </tr>
+        <tr>
+            <th>Опрос</th>
+            <th>Дата начала</th>
+            <th>Дата завершения</th>
+            <th colspan="1"></th>
+        </tr>
     {% for poll in poll_list %}
-    <tr class="pollRow" id="{{ poll.id }}"> {% csrf_token %}
-        <td><a class="poll-link" href="{{ poll.id }}"><b>{{ poll.title }}</b></a></td>
-        <td> {{ poll.date_of_begin|date:"d-m-Y" }}</td>
-        <td>{{ poll.date_of_end|date:"d-m-Y" }}</td>
-        <td align="center">
-
-            <button type="submit" name="{{ poll.id }}" class="delete">Удалить</button></td>
-
-    </tr>
+        <tr class="pollRow" id="{{ poll.id }}"> {% csrf_token %}
+            <td><a class="poll-link" href="{% url 'edit' poll.id %}"><b>{{ poll.title }}</b></a></td>
+            <td> {{ poll.date_of_begin|date:"d-m-Y" }}</td>
+            <td>{{ poll.date_of_end|date:"d-m-Y" }}</td>
+            <td align="center">
+                <button type="submit" name="{{ poll.id }}" class="delete">Удалить</button>
+            </td>
+        </tr>
     {% endfor %}
     </table>
 </body>

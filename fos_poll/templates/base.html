@@ -26,10 +26,19 @@
         <div style="float:left">
         {% if user.is_authenticated %}
             {% if request.user.is_superuser %}
-                <a href="{% url 'main_page'%}" class="header">Главная</a>
-                <a href="{% url 'admin'%}?next={{request.path}}" class="header">Админка</a>
+                {% if request.path != "/" %}
+                    <a href="{% url 'main_page'%}" class="header">Главная</a>
+                {% endif %}
+                {% if request.path != "/admin/" %}
+                    <a href="{% url 'admin'%}?next={{request.path}}" class="header">Админка</a>
+                {% endif %}
             {% else %}
-                <a href="/my_polls/" class="header">Мои опросы</a>
+                {% if request.path != "/" %}
+                     <a href="{% url 'main_page' %}" class="header">Главная</a>
+                {% endif %}
+                {% if request.path != "/my_polls/" %}
+                    <a href="{% url 'my_polls' %}" class="header">Мои опросы</a>
+                {% endif %}
             {% endif %}
         {% endif %}
 

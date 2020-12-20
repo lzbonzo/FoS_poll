@@ -1,3 +1,4 @@
+{% include 'base.html' %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -60,24 +61,21 @@
     </style>
 </head>
 <body>
-<hr>
-<div style="float:left">
-    <a href="/" class="header">Главная</a>
-</div>
-<div align="right">
-    <span class="header"></span>
-</div>
-<hr>
+{% block header %}{% endblock %}
 <h1 align="center">Мои опросы</h1>
-<section>
-    {% for poll in polls %}
-    <a class="poll-link" href="{{ poll.id }}">
-        <article>
-            <h2>{{ poll.title }}</h2>
-            <p>{{ poll.description }}</p>
-        </article>
-    </a>
-    {% endfor %}
-</section>
+{% if poll_list %}
+    <section>
+        {% for poll in poll_list %}
+        <a class="poll-link" href="{% url 'poll' poll.id %}">
+            <article>
+                <h2>{{ poll.title }}</h2>
+                <p>{{ poll.description }}</p>
+            </article>
+        </a>
+        {% endfor %}
+    </section>
+{% else %}
+    <h2 style="text-align: center;">Вы еще не прошли ни одного опроса</h2>
+{% endif %}
 </body>
 </html>
