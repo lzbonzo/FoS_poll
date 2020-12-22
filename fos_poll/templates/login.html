@@ -1,63 +1,52 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Администратор</title>
-    <style>
-        button {
-            background-color: blue;
-            width: 100%;
-            color: white;
-            padding: 15px;
-            margin: 10px 0px;
-            border: none;
-            cursor: pointer;
-            }
-<!--        form {-->
-<!--            border: 3px solid #f1f1f1;-->
-<!--            }-->
-<!--        input[type=text], input[type=password] {-->
-<!--            width: 100%;-->
-<!--            margin: 8px 0;-->
-<!--            padding: 12px 20px;-->
-<!--            display: inline-block;-->
-<!--            border: 2px solid blue;-->
-<!--            box-sizing: border-box;-->
-<!--            }-->
-        button:hover {
-            opacity: 0.7;
-            }
-
-        .container {
-            padding: 25px;
-            background-color: rgba(0, 120, 201, 0.2);
-            }
-        .warning {
-            margin: auto;
-            background-color: #ff9999;
-            width: 100%;
-            opacity: 0.5;
-            padding: 15px;
-            margin: 10px 0px;
-            border: none;
-            display: inline-block;
-            box-sizing: border-box;
-            color: black;
-            }
-
-    </style>
-</head>
-<body>
-<center><h1> Войдите в свою учетную запись </h1></center>
-<form method="post">{% csrf_token %}
-    <div class="container">
-        <label>Логин : </label>
-        <input type="text" placeholder="Введите логин" name="username" required><br>
-        <label>Пароль : </label>
-        <input type="password" placeholder="Введите пароль" name="password" required><br>
-        <button type="submit">Войти</button>
+{% block login %}
+<!-- The Modal -->
+<div id="myModal" class="modal">
+  <!-- Modal content -->
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <form method="post" >{% csrf_token %}
+            <div class="container">
+                <table>
+                    <tr>
+                        <td><label>Логин : </label></td>
+                        <td><input type="text" name="username" autofocus="" required="" id="id_username"></td>
+                    </tr>
+                    <tr>
+                        <td><label>Пароль : </label></td>
+                        <td><input type="password" name="password" required="" id="id_password"></td>
+                    </tr>
+                </table>
+                <p>
+                    <button type="submit" style="position: relative; left: 50%; transform: translate(-50%, 0%);">
+                        Войти</button>
+                </p>
+                {% if message %}
+                    <hr>
+                    <script>
+                        var modal = document.getElementById("myModal");
+                        modal.style.display = "block";
+                    </script>
+                {% endif %}
+                <p style="color: red">{{ message }}</p>
+             </div>
+         </form>
     </div>
-</form>
-{% if message %}<div class="warning">{{ message }}</div>{% endif %}
-</body>
-</html>
+</div>
+<script>
+    <!--Show modal login form-->
+    var modal = document.getElementById("myModal");
+    var btn = document.getElementById("myBtn");
+    var span = document.getElementsByClassName("close")[0];
+    btn.onclick = function() {
+      modal.style.display = "block";
+    }
+    span.onclick = function() {
+      modal.style.display = "none";
+    }
+    window.onclick = function(event) {
+      if (event.target == modal) {
+        modal.style.display = "none";
+      }
+    }
+</script>
+{% endblock %}

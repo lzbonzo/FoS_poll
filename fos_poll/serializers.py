@@ -44,5 +44,3 @@ class PollSerializer(serializers.ModelSerializer):
             for answer_data in answers:
                 Answer.objects.filter(id=answer_data['id']).update(**answer_data)
         return poll
-
-

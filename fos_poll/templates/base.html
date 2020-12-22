@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>{% block title %}{% endblock %}</title>
+
+    {% block style %}
      <style>
         a {
             text-decoration: none;
@@ -13,35 +15,70 @@
             }
         .header:hover {
             text-decoration: underline;
+            cursor: pointer;
             }
         .header {
             padding: 20px;
             }
-        {% block style %}{% endblock %}
+        /* The Modal (background) */
+        .modal {
+          display: none; /* Hidden by default */
+          position: fixed; /* Stay in place */
+          z-index: 1; /* Sit on top */
+          left: 0;
+          top: 0;
+          width: 100%; /* Full width */
+          height: 100%; /* Full height */
+          overflow: auto; /* Enable scroll if needed */
+          background-color: rgb(0,0,0); /* Fallback color */
+          background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+        }
+
+        /* Modal Content/Box */
+        .modal-content {
+          border-radius: 20px;
+          background-color: #fefefe;
+          margin: 15% auto; /* 15% from the top and centered */
+          padding: 20px;
+          border: 1px solid #888;
+          width: 20%; /* Could be more or less, depending on screen size */
+        }
+
+        /* The Close Button */
+        .close {
+          color: #aaa;
+          float: right;
+          font-size: 28px;
+          font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+          color: black;
+          text-decoration: none;
+          cursor: pointer;
+        }
      </style>
+    {% endblock %}
 </head>
 <body>
 {% block header %}
     <hr>
         <div style="float:left">
+        {% if request.path != "/" %}
+            <a href="{% url 'main_page'%}" class="header">Главная</a>
+        {% endif %}
         {% if user.is_authenticated %}
             {% if request.user.is_superuser %}
-                {% if request.path != "/" %}
-                    <a href="{% url 'main_page'%}" class="header">Главная</a>
-                {% endif %}
                 {% if request.path != "/admin/" %}
-                    <a href="{% url 'admin'%}?next={{request.path}}" class="header">Админка</a>
+                    <a href="{% url 'admin'%}" class="header">Админка</a>
                 {% endif %}
             {% else %}
-                {% if request.path != "/" %}
-                     <a href="{% url 'main_page' %}" class="header">Главная</a>
-                {% endif %}
                 {% if request.path != "/my_polls/" %}
                     <a href="{% url 'my_polls' %}" class="header">Мои опросы</a>
                 {% endif %}
             {% endif %}
         {% endif %}
-
         </div>
             <div align="right">
                 {% if user.is_authenticated %}
@@ -52,6 +89,9 @@
             </div>
     <hr style="margin-bottom: 0px;">
 {% endblock %}
-    {% block content %}{% endblock %}
+{% block content %}{% endblock %}
+{% include 'login.html' %}
+{% block login %}{% endblock %}
+
 </body>
 </html>

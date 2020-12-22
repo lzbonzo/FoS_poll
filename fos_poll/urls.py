@@ -1,6 +1,7 @@
 from django.conf.urls import url
 from django.contrib.auth.views import LogoutView
-from django.urls import path
+from django.urls import path, include
+from rest_framework.authtoken.views import obtain_auth_token
 
 from fos_poll import views
 
@@ -19,4 +20,5 @@ urlpatterns = [
     path("api/v0/polls/", views.EditPollApiView().as_view(), name='api_polls_list'),
     path("api/v0/logout/", views.ApiLogoutView.as_view(), name='api_logout'),
     path("api/v0/login/", views.ApiLoginView.as_view(), name='api_login'),
+    path('api-token-auth/', obtain_auth_token, name='api_token_auth'),
 ]

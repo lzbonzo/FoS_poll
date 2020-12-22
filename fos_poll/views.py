@@ -1,18 +1,17 @@
 from collections import OrderedDict
 
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.mixins import UserPassesTestMixin
-from django.contrib.auth.views import LoginView
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, redirect
 from django.views import generic
 from django.views.generic import TemplateView
-from django.views.generic.edit import FormMixin, FormView
-from rest_framework import status
 
+from rest_framework import status, exceptions, authentication
+from rest_framework.authtoken.models import Token
+from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.generics import get_object_or_404
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -64,34 +63,35 @@ class EditPollApiView(APIView):
 
 
 class ApiLoginView(APIView):
-    permission_classes = (AllowAny,)
+    # TODO fix auth
 
     def post(self, request, **kwargs):
-        username = request.data['username']
-        password = request.data['password']
+        username = request.data.get('username', None)
+        password = request.data.get('password', None)
+
+
         user = authenticate(request, username=username, password=password)
+        print(request.auth)
         if user is not None:
             login(request, user)
             if user.is_superuser:
                 return Response({"success": "You are successfully logged in as admin."})
             return Response({"success": "You are successfully logged in."})
         else:
-            return Response({"error" :"You have entered an invalid username or password"})
+            raise exceptions.AuthenticationFailed({"error": "You have entered an invalid username or password"})
 
 
 class ApiLogoutView(APIView):
-    # TODO API auth
     permission_classes = (AllowAny,)
 
     def post(self, request, format=None):
         logout(request)
-        # request.user.auth_token.delete()
+        request.user.auth_token.delete()
         return Response(status=status.HTTP_200_OK)
 
 
-class PollListView(FormView, generic.ListView):
+class PollListView(generic.ListView):
     model = Poll
-    form_class = AuthenticationForm
 
     def get_context_data(self, **kwargs):
         self.object_list = self.get_queryset()
@@ -99,8 +99,9 @@ class PollListView(FormView, generic.ListView):
         return context
 
     def post(self, request, **kwargs):
-        username = request.POST['username']
-        password = request.POST['password']
+        """ Need to auth"""
+        username = request.POST.get('username')
+        password = request.POST.get('password')
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
@@ -199,12 +200,14 @@ class MyPollsView(generic.ListView):
     queryset = Poll.objects.all()
 
 
-class UserPollView(generic.DetailView):
+class UserPollView(generic.DetailView, PollListView):
     template_name = 'poll.html'
     model = Poll
     form_class = PollForm
 
     def get_context_data(self, **kwargs):
+        if self.request.method == 'POST':
+            self.object = self.get_object()
         context = super().get_context_data(**kwargs)
         poll = context['poll']
         context['questions_formset'] = QuestionFormSet(prefix='questions_formset', instance=poll)
