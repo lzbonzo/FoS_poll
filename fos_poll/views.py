@@ -1,20 +1,17 @@
-from collections import OrderedDict
-
-from django.contrib.auth import authenticate, login, logout, get_user_model
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, redirect
 from django.views import generic
 from django.views.generic import TemplateView
 
-from rest_framework import status, exceptions, authentication
-from rest_framework.authtoken.models import Token
-from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework import status, exceptions
 from rest_framework.generics import get_object_or_404
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from fos_poll.helpers import poll_data_serialize, check_user_answers
 from fos_poll.models import Poll, Question
 from fos_poll.forms import QuestionFormSet, PollForm, QuestionForm
 from fos_poll.permissions import IsAdminOrReadOnly
@@ -69,9 +66,7 @@ class ApiLoginView(APIView):
         username = request.data.get('username', None)
         password = request.data.get('password', None)
 
-
         user = authenticate(request, username=username, password=password)
-        print(request.auth)
         if user is not None:
             login(request, user)
             if user.is_superuser:
@@ -98,8 +93,7 @@ class PollListView(generic.ListView):
         context = super().get_context_data()
         return context
 
-    def post(self, request, **kwargs):
-        """ Need to auth"""
+    def auth(self, request, **kwargs):
         username = request.POST.get('username')
         password = request.POST.get('password')
         user = authenticate(request, username=username, password=password)
@@ -112,6 +106,12 @@ class PollListView(generic.ListView):
             context = self.get_context_data(**kwargs)
             context['message'] = '*логин или пароль введены неверно'
             return render(request, self.template_name, context)
+
+    def post(self, request, **kwargs):
+        """ Need to auth"""
+        auth_result = self.auth(request, **kwargs)
+        return auth_result
+
 
 
 class AdminPollListView(UserPassesTestMixin, PollListView):
@@ -151,8 +151,7 @@ class EditPollView(UserPassesTestMixin, generic.UpdateView):
     def post(self, request, *args, **kwargs):
         super_post = super().post(request, *args, **kwargs)
         poll = self.object
-
-        questions = self.serialize_data(request.POST)
+        questions = poll_data_serialize(request.POST)
         Question.objects.filter(poll=poll).delete()
         for question, data in questions.items():
             question_form = QuestionForm(instance=Question(poll=poll), data=data)
@@ -160,38 +159,6 @@ class EditPollView(UserPassesTestMixin, generic.UpdateView):
                 question_form.save()
         return super_post
 
-    def serialize_data(self, post_data):
-        """ Prepare request.POST data to save"""
-        questions = OrderedDict()
-        is_right_list = []
-        for field, value in post_data.items():
-            if 'question' in field:
-                field_splitted = field.split('_')
-                question = '_'.join(field_splitted[:2])
-                if len(field_splitted) != 2:
-                    field_name = '_'.join(field_splitted[2:])
-                    if not questions.get(question):
-                        questions[question] = {}
-                        if not questions[question].get('answers'):
-                            questions[question]['answers'] = []
-                    if field_name == 'right_answer':
-                        questions[question]['answers'].append({'text': value, 'is_right': True})
-                    elif field_name == 'isRight':
-                        is_right_list.extend(post_data.getlist(field))
-                    else:
-                        if 'answerOption' in field_name:
-                            questions[question]['answers'].append({'text': value, 'is_right': False})
-                        else:
-                            questions[question][field_name] = value
-
-        # Check answers in checkboxes
-        if is_right_list:
-            for option in is_right_list:
-                splitted_option_name = option.split('_')
-                question = '_'.join(splitted_option_name[:2])
-                number_of_right_answer = int(splitted_option_name[-1]) - 1
-                questions[question]['answers'][number_of_right_answer]['is_right'] = True
-        return questions
 
 
 class MyPollsView(generic.ListView):
@@ -206,12 +173,22 @@ class UserPollView(generic.DetailView, PollListView):
     form_class = PollForm
 
     def get_context_data(self, **kwargs):
-        if self.request.method == 'POST':
-            self.object = self.get_object()
         context = super().get_context_data(**kwargs)
         poll = context['poll']
         context['questions_formset'] = QuestionFormSet(prefix='questions_formset', instance=poll)
         return context
+
+    def post(self, request, **kwargs):
+        if not request.user.is_authenticated:
+            self.auth(request, **kwargs)
+        self.object = self.get_object()
+        context = self.get_context_data(**kwargs)
+        user_answers = poll_data_serialize(request.POST)
+        right_answers_amount, checked_answers = check_user_answers(user_answers, context)
+        context['right_answers_amount'] = right_answers_amount
+        context['checked_answers'] = checked_answers
+
+        return render(request, self.template_name, context)
 
 
 class About(TemplateView):
